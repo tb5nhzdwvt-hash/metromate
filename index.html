@@ -472,104 +472,123 @@ body {
 // ============================================================
 
 // TODO [DMRC API]: Replace fixed Google routing with DMRC live departure board for real-time train tracking
+
+// Lazy-load Maps JS SDK (needed for DirectionsService — REST Directions API blocks CORS)
+let _mapsApiPromise = null;
+function loadMapsJS(key) {
+  if (!_mapsApiPromise) {
+    _mapsApiPromise = new Promise((resolve, reject) => {
+      if (window.google?.maps?.DirectionsService) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('Failed to load Google Maps SDK.'));
+      document.head.appendChild(s);
+    });
+  }
+  return _mapsApiPromise;
+}
+
+function legFromTransit(td) {
+  // JS SDK uses LatLng objects (.lat()/.lng()), REST API uses plain numbers
+  const loc = l => typeof l.lat === 'function' ? [l.lat(), l.lng()] : [l.lat, l.lng];
+  return {
+    type:          'metro',
+    lineName:      td.line.name || td.line.short_name || 'Metro',
+    lineColor:     td.line.color      || '#888888',
+    lineTextColor: td.line.text_color || '#ffffff',
+    fromStation:   td.departure_stop.name,
+    toStation:     td.arrival_stop.name,
+    fromCoords:    loc(td.departure_stop.location),
+    toCoords:      loc(td.arrival_stop.location),
+    stops:         td.num_stops,
+    headsign:      td.headsign || ''
+  };
+}
+
+function interchangeFromTransits(prevTd, nextTd, durationMin) {
+  return {
+    type: 'interchange',
+    at:                prevTd.arrival_stop.name,
+    fromLineName:      prevTd.line.name || prevTd.line.short_name || 'Metro',
+    fromLineColor:     prevTd.line.color      || '#888888',
+    fromLineTextColor: prevTd.line.text_color || '#ffffff',
+    toLineName:        nextTd.line.name || nextTd.line.short_name || 'Metro',
+    toLineColor:       nextTd.line.color      || '#888888',
+    toLineTextColor:   nextTd.line.text_color || '#ffffff',
+    durationMin
+  };
+}
+
 async function planRoute(fromCoords, toCoords, depTime) {
   const key = ls('mm_mapsApiKey') || '';
   if (!key) throw new Error('No API key set. Add it in Settings.');
 
-  // Departure timestamp — must be in the future for transit routing
+  await loadMapsJS(key);
+
+  // Departure time must be in the future for transit routing
   const [h, m] = (depTime || '00:00').split(':').map(Number);
   const dep = new Date();
   dep.setHours(h, m, 0, 0);
   if (dep.getTime() < Date.now() + 60000) dep.setTime(Date.now() + 5 * 60 * 1000);
-  const departure_time = Math.floor(dep.getTime() / 1000);
 
-  const url =
-    `https://maps.googleapis.com/maps/api/directions/json` +
-    `?origin=${fromCoords[0]},${fromCoords[1]}` +
-    `&destination=${toCoords[0]},${toCoords[1]}` +
-    `&mode=transit&transit_mode=subway%7Ctram` +
-    `&departure_time=${departure_time}` +
-    `&key=${key}`;
+  const result = await new Promise((resolve, reject) => {
+    new google.maps.DirectionsService().route({
+      origin:      new google.maps.LatLng(fromCoords[0], fromCoords[1]),
+      destination: new google.maps.LatLng(toCoords[0],   toCoords[1]),
+      travelMode:  google.maps.TravelMode.TRANSIT,
+      transitOptions: {
+        departureTime: dep,
+        modes: [google.maps.TransitMode.SUBWAY, google.maps.TransitMode.TRAIN]
+      }
+    }, (res, status) => {
+      if (status === google.maps.DirectionsStatus.OK) resolve(res);
+      else if (status === 'ZERO_RESULTS') resolve(null);
+      else reject(new Error(`Route lookup failed: ${status}`));
+    });
+  });
 
-  const res = await fetch(url);
-  const data = await res.json();
+  if (!result) return null;
 
-  if (data.status === 'ZERO_RESULTS') return null;
-  if (data.status !== 'OK') throw new Error(`Route lookup failed: ${data.status}`);
-
-  const routeLeg = data.routes[0].legs[0];
-  const steps    = routeLeg.steps;
-  const legs     = [];
-  let totalMin   = 0;
+  const steps   = result.routes[0].legs[0].steps;
+  const legs    = [];
+  let totalMin  = 0;
 
   for (let i = 0; i < steps.length; i++) {
     const step        = steps[i];
+    // JS SDK: step.duration.value (seconds), step.distance.value (metres)
     const durationMin = step.duration.value / 60;
     const distKm      = step.distance.value / 1000;
+    // JS SDK uses step.transit (not transit_details)
+    const td          = step.transit;
 
     if (step.travel_mode === 'TRANSIT') {
-      const td = step.transit_details;
-
-      // Adjacent TRANSIT steps with no walking between = same-station platform change
+      // Adjacent TRANSIT steps = same-station platform change (no walking step between)
       if (i > 0 && steps[i - 1].travel_mode === 'TRANSIT') {
-        const prevTd = steps[i - 1].transit_details;
-        legs.push({
-          type: 'interchange',
-          at:                 prevTd.arrival_stop.name,
-          fromLineName:       prevTd.line.name || prevTd.line.short_name || 'Metro',
-          fromLineColor:      prevTd.line.color       || '#888888',
-          fromLineTextColor:  prevTd.line.text_color  || '#ffffff',
-          toLineName:         td.line.name || td.line.short_name || 'Metro',
-          toLineColor:        td.line.color       || '#888888',
-          toLineTextColor:    td.line.text_color  || '#ffffff',
-          durationMin: 0
-        });
+        legs.push(interchangeFromTransits(steps[i - 1].transit, td, 0));
       }
-
-      legs.push({
-        type:          'metro',
-        lineName:      td.line.name || td.line.short_name || 'Metro',
-        lineColor:     td.line.color       || '#888888',
-        lineTextColor: td.line.text_color  || '#ffffff',
-        fromStation:   td.departure_stop.name,
-        toStation:     td.arrival_stop.name,
-        fromCoords:    [td.departure_stop.location.lat, td.departure_stop.location.lng],
-        toCoords:      [td.arrival_stop.location.lat,   td.arrival_stop.location.lng],
-        stops:         td.num_stops,
-        durationMin,
-        headsign:      td.headsign || ''
-      });
+      const metroLeg = legFromTransit(td);
+      metroLeg.durationMin = durationMin;
+      legs.push(metroLeg);
       totalMin += durationMin;
 
     } else { // WALKING
       const prevTransit = steps.slice(0, i).reverse().find(s => s.travel_mode === 'TRANSIT');
       const nextTransit = steps.slice(i + 1).find(s => s.travel_mode === 'TRANSIT');
+      const loc = l => typeof l.lat === 'function' ? [l.lat(), l.lng()] : [l.lat, l.lng];
 
       if (prevTransit && nextTransit) {
-        // Walking between two transit segments = transfer with walk time
-        const pTd = prevTransit.transit_details;
-        const nTd = nextTransit.transit_details;
-        legs.push({
-          type: 'interchange',
-          at:                pTd.arrival_stop.name,
-          fromLineName:      pTd.line.name || pTd.line.short_name || 'Metro',
-          fromLineColor:     pTd.line.color      || '#888888',
-          fromLineTextColor: pTd.line.text_color || '#ffffff',
-          toLineName:        nTd.line.name || nTd.line.short_name || 'Metro',
-          toLineColor:       nTd.line.color      || '#888888',
-          toLineTextColor:   nTd.line.text_color || '#ffffff',
-          durationMin
-        });
+        // Walking between two transit segments = timed interchange
+        legs.push(interchangeFromTransits(prevTransit.transit, nextTransit.transit, Math.round(durationMin)));
         totalMin += durationMin;
       } else {
-        // First or last walking step = auto/Uber leg
         const isFirst = !prevTransit;
         legs.push({
           type:       'auto',
-          fromName:   isFirst ? 'Your location' : prevTransit.transit_details.arrival_stop.name,
-          fromCoords: [step.start_location.lat, step.start_location.lng],
-          toName:     !isFirst ? 'Your destination' : nextTransit.transit_details.departure_stop.name,
-          toCoords:   [step.end_location.lat, step.end_location.lng],
+          fromName:   isFirst ? 'Your location' : prevTransit.transit.arrival_stop.name,
+          fromCoords: loc(step.start_location),
+          toName:     !isFirst ? 'Your destination' : nextTransit.transit.departure_stop.name,
+          toCoords:   loc(step.end_location),
           distKm,
           durationMin
         });
@@ -580,8 +599,7 @@ async function planRoute(fromCoords, toCoords, depTime) {
 
   if (legs.length === 0) return null;
 
-  // Google sometimes omits walking legs when origin/dest is at station entrance.
-  // Ensure first and last legs are always auto so Uber buttons exist.
+  // Ensure first/last legs are always auto so Uber buttons always exist
   if (legs[0].type !== 'auto') {
     const fm = legs[0];
     legs.unshift({ type: 'auto', fromName: 'Your location', fromCoords, toName: fm.fromStation, toCoords: fm.fromCoords, distKm: 0, durationMin: 0 });

@@ -1047,6 +1047,7 @@ function findNearestStation(lat, lng) {
 function dijkstra(graph, startNodes, endNodes) {
   const dist = {};
   const prev = {};
+  const visited = new Set();
   const heap = new MinHeap();
 
   for (const n of startNodes) {
@@ -1056,17 +1057,20 @@ function dijkstra(graph, startNodes, endNodes) {
 
   while (heap.size > 0) {
     const {cost, node} = heap.pop();
-    if (cost > (dist[node] || Infinity)) continue;
+    if (visited.has(node)) continue;
+    visited.add(node);
+
     if (endNodes.has(node)) {
-      // Reconstruct path
       const path = [];
       let cur = node;
-      while (cur) { path.unshift(cur); cur = prev[cur]; }
+      const seen = new Set();
+      while (cur && !seen.has(cur)) { seen.add(cur); path.unshift(cur); cur = prev[cur]; }
       return {cost, path};
     }
     for (const edge of (graph[node] || [])) {
+      if (visited.has(edge.to)) continue;
       const nc = cost + edge.cost;
-      if (nc < (dist[edge.to] || Infinity)) {
+      if (dist[edge.to] === undefined || nc < dist[edge.to]) {
         dist[edge.to] = nc;
         prev[edge.to] = node;
         heap.push({cost: nc, node: edge.to});

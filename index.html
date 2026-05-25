@@ -468,736 +468,133 @@ body {
 
 <script>
 // ============================================================
-// METRO NETWORK DATA
+// ROUTE PLANNING — Google Directions API (transit)
 // ============================================================
 
-const STOP_INTERVAL_MIN = 2.22;
-// TODO [DMRC API]: Replace STOP_INTERVAL_MIN with live departure board data
-const INTERCHANGE_PENALTY_MIN = 5;
-const BRANCH_PENALTY_MIN = 2;
+// TODO [DMRC API]: Replace fixed Google routing with DMRC live departure board for real-time train tracking
+async function planRoute(fromCoords, toCoords, depTime) {
+  const key = ls('mm_mapsApiKey') || '';
+  if (!key) throw new Error('No API key set. Add it in Settings.');
 
-const STATIONS = {
-  // YELLOW LINE
-  samaypur_badli:      { name: 'Samaypur Badli',       coords: [28.7305, 77.1379] },
-  rohini_sector_18_19: { name: 'Rohini Sector 18-19',  coords: [28.7283, 77.1467] },
-  haiderpur_badli_mor: { name: 'Haiderpur Badli Mor',  coords: [28.7262, 77.1548] },
-  jahangirpuri:        { name: 'Jahangirpuri',          coords: [28.7268, 77.1619] },
-  adarsh_nagar:        { name: 'Adarsh Nagar',          coords: [28.7215, 77.1673] },
-  azadpur:             { name: 'Azadpur',               coords: [28.7113, 77.1762] },
-  model_town:          { name: 'Model Town',            coords: [28.7032, 77.1882] },
-  gtb_nagar:           { name: 'GTB Nagar',             coords: [28.6960, 77.2020] },
-  vishwavidyalaya:     { name: 'Vishwavidyalaya',       coords: [28.6890, 77.2100] },
-  vidhan_sabha:        { name: 'Vidhan Sabha',          coords: [28.6822, 77.2170] },
-  civil_lines:         { name: 'Civil Lines',           coords: [28.6762, 77.2237] },
-  kashmere_gate:       { name: 'Kashmere Gate',         coords: [28.6672, 77.2291] },
-  chandni_chowk:       { name: 'Chandni Chowk',        coords: [28.6580, 77.2304] },
-  chawri_bazar:        { name: 'Chawri Bazar',          coords: [28.6497, 77.2264] },
-  new_delhi:           { name: 'New Delhi',             coords: [28.6420, 77.2197] },
-  rajiv_chowk:         { name: 'Rajiv Chowk',          coords: [28.6328, 77.2195] },
-  patel_chowk:         { name: 'Patel Chowk',          coords: [28.6248, 77.2151] },
-  central_secretariat: { name: 'Central Secretariat',  coords: [28.6147, 77.2120] },
-  udyog_bhawan:        { name: 'Udyog Bhawan',          coords: [28.6060, 77.2098] },
-  lok_kalyan_marg:     { name: 'Lok Kalyan Marg',      coords: [28.5980, 77.2086] },
-  jor_bagh:            { name: 'Jor Bagh',              coords: [28.5890, 77.2082] },
-  ina:                 { name: 'INA',                   coords: [28.5763, 77.2079] },
-  aiims:               { name: 'AIIMS',                 coords: [28.5678, 77.2090] },
-  green_park:          { name: 'Green Park',            coords: [28.5570, 77.2076] },
-  hauz_khas:           { name: 'Hauz Khas',             coords: [28.5434, 77.2066] },
-  malviya_nagar:       { name: 'Malviya Nagar',         coords: [28.5328, 77.2105] },
-  saket:               { name: 'Saket',                 coords: [28.5217, 77.2163] },
-  qutab_minar:         { name: 'Qutab Minar',          coords: [28.5053, 77.1852] },
-  chhattarpur:         { name: 'Chhattarpur',           coords: [28.4930, 77.1650] },
-  sultanpur:           { name: 'Sultanpur',             coords: [28.4840, 77.1500] },
-  ghitorni:            { name: 'Ghitorni',              coords: [28.4762, 77.1330] },
-  arjangarh:           { name: 'Arjangarh',             coords: [28.4670, 77.1133] },
-  guru_dronacharya:    { name: 'Guru Dronacharya',      coords: [28.4740, 77.0980] },
-  sikanderpur:         { name: 'Sikanderpur',           coords: [28.4808, 77.0883] },
-  mg_road:             { name: 'MG Road',               coords: [28.4760, 77.0783] },
-  iffco_chowk:         { name: 'IFFCO Chowk',          coords: [28.4729, 77.0695] },
-  huda_city_centre:    { name: 'Huda City Centre',     coords: [28.4595, 77.0266] },
+  // Departure timestamp — must be in the future for transit routing
+  const [h, m] = (depTime || '00:00').split(':').map(Number);
+  const dep = new Date();
+  dep.setHours(h, m, 0, 0);
+  if (dep.getTime() < Date.now() + 60000) dep.setTime(Date.now() + 5 * 60 * 1000);
+  const departure_time = Math.floor(dep.getTime() / 1000);
 
-  // RED LINE
-  rithala:             { name: 'Rithala',               coords: [28.7237, 77.1063] },
-  rohini_west:         { name: 'Rohini West',           coords: [28.7145, 77.1120] },
-  rohini_east:         { name: 'Rohini East',           coords: [28.7060, 77.1200] },
-  pitampura:           { name: 'Pitampura',             coords: [28.7000, 77.1320] },
-  kohat_enclave:       { name: 'Kohat Enclave',         coords: [28.6970, 77.1410] },
-  netaji_subhash_place:{ name: 'Netaji Subhash Place',  coords: [28.6942, 77.1536] },
-  keshav_puram:        { name: 'Keshav Puram',          coords: [28.6900, 77.1600] },
-  kanhaiya_nagar:      { name: 'Kanhaiya Nagar',        coords: [28.6858, 77.1642] },
-  inderlok:            { name: 'Inderlok',              coords: [28.6778, 77.1684] },
-  shastri_nagar:       { name: 'Shastri Nagar',         coords: [28.6700, 77.1740] },
-  pratap_nagar:        { name: 'Pratap Nagar',          coords: [28.6630, 77.1796] },
-  pulbangash:          { name: 'Pulbangash',            coords: [28.6570, 77.1878] },
-  tis_hazari:          { name: 'Tis Hazari',            coords: [28.6638, 77.2170] },
-  model_town_red:      { name: 'Model Town (Red)',      coords: [28.6720, 77.2220] }, // shared with different name
-  // Kashmere Gate shared
-  shastri_park:        { name: 'Shastri Park',          coords: [28.6720, 77.2510] },
-  seelampur:           { name: 'Seelampur',             coords: [28.6778, 77.2590] },
-  welcome:             { name: 'Welcome',               coords: [28.6779, 77.2883] },
-  shahdara:            { name: 'Shahdara',              coords: [28.6720, 77.2960] },
-  mansarovar_park:     { name: 'Mansarovar Park',       coords: [28.6650, 77.3040] },
-  jhilmil:             { name: 'Jhilmil',               coords: [28.6590, 77.3120] },
-  dilshad_garden:      { name: 'Dilshad Garden',        coords: [28.6520, 77.3180] },
-  shaheed_sthal:       { name: 'Shaheed Sthal / New Bus Adda', coords: [28.6460, 77.3250] },
+  const url =
+    `https://maps.googleapis.com/maps/api/directions/json` +
+    `?origin=${fromCoords[0]},${fromCoords[1]}` +
+    `&destination=${toCoords[0]},${toCoords[1]}` +
+    `&mode=transit&transit_mode=subway%7Ctram` +
+    `&departure_time=${departure_time}` +
+    `&key=${key}`;
 
-  // BLUE LINE
-  dwarka_sector_21:    { name: 'Dwarka Sector 21',     coords: [28.5520, 77.0580] },
-  dwarka_sector_8:     { name: 'Dwarka Sector 8',      coords: [28.5620, 77.0680] },
-  dwarka_sector_9:     { name: 'Dwarka Sector 9',      coords: [28.5700, 77.0730] },
-  dwarka_sector_10:    { name: 'Dwarka Sector 10',     coords: [28.5780, 77.0790] },
-  dwarka_sector_11:    { name: 'Dwarka Sector 11',     coords: [28.5860, 77.0850] },
-  dwarka_sector_12:    { name: 'Dwarka Sector 12',     coords: [28.5922, 77.0887] },
-  dwarka:              { name: 'Dwarka',               coords: [28.5922, 77.0587] },
-  dwarka_mor:          { name: 'Dwarka Mor',           coords: [28.6020, 77.0680] },
-  nawada:              { name: 'Nawada',               coords: [28.6109, 77.0780] },
-  uttam_nagar_west:    { name: 'Uttam Nagar West',     coords: [28.6197, 77.0900] },
-  uttam_nagar_east:    { name: 'Uttam Nagar East',     coords: [28.6240, 77.1010] },
-  janakpuri_west:      { name: 'Janakpuri West',       coords: [28.6280, 77.0830] },
-  janakpuri_east:      { name: 'Janakpuri East',       coords: [28.6330, 77.1020] },
-  tilak_nagar:         { name: 'Tilak Nagar',          coords: [28.6380, 77.1160] },
-  subhash_nagar:       { name: 'Subhash Nagar',        coords: [28.6420, 77.1280] },
-  tagore_garden:       { name: 'Tagore Garden',        coords: [28.6450, 77.1390] },
-  rajouri_garden:      { name: 'Rajouri Garden',       coords: [28.6471, 77.1219] },
-  ramesh_nagar:        { name: 'Ramesh Nagar',         coords: [28.6510, 77.1500] },
-  moti_nagar:          { name: 'Moti Nagar',           coords: [28.6540, 77.1620] },
-  kirti_nagar:         { name: 'Kirti Nagar',          coords: [28.6569, 77.1721] },
-  shadipur:            { name: 'Shadipur',             coords: [28.6530, 77.1840] },
-  patel_nagar:         { name: 'Patel Nagar',          coords: [28.6510, 77.1940] },
-  rajendra_place:      { name: 'Rajendra Place',       coords: [28.6480, 77.2040] },
-  karol_bagh:          { name: 'Karol Bagh',           coords: [28.6450, 77.2120] },
-  jhandewalan:         { name: 'Jhandewalan',          coords: [28.6420, 77.2170] },
-  // Rajiv Chowk shared
-  barakhamba_road:     { name: 'Barakhamba Road',      coords: [28.6300, 77.2270] },
-  mandi_house:         { name: 'Mandi House',          coords: [28.6271, 77.2397] },
-  supreme_court:       { name: 'Supreme Court',        coords: [28.6238, 77.2490] },
-  indraprastha:        { name: 'Indraprastha',         coords: [28.6190, 77.2548] },
-  yamuna_bank:         { name: 'Yamuna Bank',          coords: [28.6225, 77.2939] },
-  // Branch from Yamuna Bank to Vaishali
-  laxmi_nagar:         { name: 'Laxmi Nagar',         coords: [28.6323, 77.2783] },
-  nirman_vihar:        { name: 'Nirman Vihar',         coords: [28.6380, 77.2880] },
-  preet_vihar:         { name: 'Preet Vihar',          coords: [28.6440, 77.2980] },
-  karkarduma:          { name: 'Karkarduma',           coords: [28.6500, 77.3070] },
-  anand_vihar_isbt:    { name: 'Anand Vihar ISBT',    coords: [28.6480, 77.3150] },
-  kaushambi:           { name: 'Kaushambi',            coords: [28.6450, 77.3280] },
-  vaishali:            { name: 'Vaishali',             coords: [28.6455, 77.3380] },
+  const res = await fetch(url);
+  const data = await res.json();
 
-  // BLUE BRANCH (Yamuna Bank → Noida Electronic City)
-  akshardham:          { name: 'Akshardham',           coords: [28.6126, 77.2805] },
-  mayur_vihar_1:       { name: 'Mayur Vihar Phase 1',  coords: [28.6065, 77.2927] },
-  mayur_vihar_extension: { name: 'Mayur Vihar Extension', coords: [28.6011, 77.3010] },
-  new_ashok_nagar:     { name: 'New Ashok Nagar',      coords: [28.5962, 77.3083] },
-  noida_sector_15:     { name: 'Noida Sector 15',      coords: [28.5859, 77.3120] },
-  noida_sector_16:     { name: 'Noida Sector 16',      coords: [28.5760, 77.3145] },
-  noida_sector_18:     { name: 'Noida Sector 18',      coords: [28.5700, 77.3225] },
-  botanical_garden:    { name: 'Botanical Garden',     coords: [28.5561, 77.3083] },
-  noida_city_centre:   { name: 'Noida City Centre',    coords: [28.5740, 77.3340] },
-  golf_course:         { name: 'Golf Course',           coords: [28.5640, 77.3420] },
-  noida_sector_34:     { name: 'Noida Sector 34',      coords: [28.5610, 77.3520] },
-  noida_sector_52:     { name: 'Noida Sector 52',      coords: [28.5970, 77.3550] },
-  noida_sector_61:     { name: 'Noida Sector 61',      coords: [28.6060, 77.3650] },
-  noida_sector_59:     { name: 'Noida Sector 59',      coords: [28.5985, 77.3720] },
-  noida_sector_62:     { name: 'Noida Sector 62',      coords: [28.6093, 77.3782] },
-  noida_electronic_city: { name: 'Noida Electronic City', coords: [28.5828, 77.3573] },
+  if (data.status === 'ZERO_RESULTS') return null;
+  if (data.status !== 'OK') throw new Error(`Route lookup failed: ${data.status}`);
 
-  // GREEN LINE
-  inderlok_green:      { name: 'Inderlok',             coords: [28.6778, 77.1684] },
-  ashok_park:          { name: 'Ashok Park Main',      coords: [28.6700, 77.1580] },
-  punjabi_bagh_west:   { name: 'Punjabi Bagh West',    coords: [28.6680, 77.1440] },
-  shivaji_park:        { name: 'Shivaji Park',         coords: [28.6640, 77.1330] },
-  madipur:             { name: 'Madipur',              coords: [28.6620, 77.1220] },
-  paschim_vihar_east:  { name: 'Paschim Vihar East',  coords: [28.6698, 77.1110] },
-  paschim_vihar_west:  { name: 'Paschim Vihar West',  coords: [28.6730, 77.0987] },
-  peera_garhi:         { name: 'Peera Garhi',          coords: [28.6758, 77.0880] },
-  udyog_nagar:         { name: 'Udyog Nagar',          coords: [28.6660, 77.0820] },
-  surajmal_stadium:    { name: 'Surajmal Stadium',     coords: [28.6600, 77.0740] },
-  nangloi:             { name: 'Nangloi',              coords: [28.6520, 77.0680] },
-  nangloi_railway:     { name: 'Nangloi Railway Station', coords: [28.6460, 77.0612] },
-  rajdhani_park:       { name: 'Rajdhani Park',        coords: [28.6410, 77.0560] },
-  mundka:              { name: 'Mundka',               coords: [28.6360, 77.0482] },
-  mundka_industrial:   { name: 'Mundka Industrial Area', coords: [28.6305, 77.0420] },
-  ghevra:              { name: 'Ghevra',               coords: [28.6254, 77.0358] },
-  tikri_kalan:         { name: 'Tikri Kalan',          coords: [28.6200, 77.0278] },
-  tikri_border:        { name: 'Tikri Border',         coords: [28.6143, 77.0210] },
-  pandit_shree_ram:    { name: 'Pandit Shree Ram Sharma', coords: [28.6083, 77.0140] },
-  bahadurgarh_city:    { name: 'Bahadurgarh City Park', coords: [28.6020, 77.0060] },
-  brigadier_hoshiyar:  { name: 'Brigadier Hoshiyar Singh', coords: [28.5978, 76.9998] },
+  const routeLeg = data.routes[0].legs[0];
+  const steps    = routeLeg.steps;
+  const legs     = [];
+  let totalMin   = 0;
 
-  // GREEN BRANCH (Kirti Nagar → Ashok Park)
-  kirti_nagar_green:   { name: 'Kirti Nagar',          coords: [28.6569, 77.1721] },
-  satguru_ram_singh:   { name: 'Satguru Ram Singh Marg', coords: [28.6630, 77.1650] },
-  ashok_park_main:     { name: 'Ashok Park Main',      coords: [28.6700, 77.1580] },
+  for (let i = 0; i < steps.length; i++) {
+    const step        = steps[i];
+    const durationMin = step.duration.value / 60;
+    const distKm      = step.distance.value / 1000;
 
-  // VIOLET LINE
-  // Kashmere Gate shared
-  lal_qila:            { name: 'Lal Qila',             coords: [28.6562, 77.2408] },
-  jama_masjid:         { name: 'Jama Masjid',          coords: [28.6507, 77.2340] },
-  delhi_gate:          { name: 'Delhi Gate',           coords: [28.6437, 77.2393] },
-  ito:                 { name: 'ITO',                  coords: [28.6349, 77.2420] },
-  // Mandi House shared
-  janpath:             { name: 'Janpath',              coords: [28.6224, 77.2163] },
-  // Central Secretariat shared
-  khan_market:         { name: 'Khan Market',          coords: [28.6006, 77.2263] },
-  jawaharlal_nehru_stadium: { name: 'Jawaharlal Nehru Stadium', coords: [28.5857, 77.2367] },
-  jangpura:            { name: 'Jangpura',             coords: [28.5773, 77.2416] },
-  lajpat_nagar:        { name: 'Lajpat Nagar',         coords: [28.5695, 77.2431] },
-  moolchand:           { name: 'Moolchand',            coords: [28.5626, 77.2399] },
-  kalkaji_mandir:      { name: 'Kalkaji Mandir',       coords: [28.5489, 77.2616] },
-  govind_puri:         { name: 'Govind Puri',          coords: [28.5412, 77.2675] },
-  harkesh_nagar:       { name: 'Harkesh Nagar Okhla',  coords: [28.5352, 77.2735] },
-  jasola_apollo:       { name: 'Jasola Apollo',        coords: [28.5300, 77.2810] },
-  okhla_nsic:          { name: 'Okhla NSIC',           coords: [28.5253, 77.2878] },
-  mohan_estate:        { name: 'Mohan Estate',         coords: [28.5182, 77.2944] },
-  tughlakabad:         { name: 'Tughlakabad',           coords: [28.5120, 77.2999] },
-  badarpur:            { name: 'Badarpur Border',      coords: [28.5053, 77.3066] },
-  sarita_vihar:        { name: 'Sarita Vihar',         coords: [28.5265, 77.2948] },
-  faridabad_old:       { name: 'Faridabad Old',        coords: [28.4998, 77.3138] },
-  neelam_ajronda:      { name: 'Neelam Ajronda',       coords: [28.4920, 77.3201] },
-  bata_chowk:          { name: 'Bata Chowk',           coords: [28.4857, 77.3258] },
-  escort_mujesar:      { name: 'Escort Mujesar',       coords: [28.4803, 77.3305] },
-  raja_nahar_singh:    { name: 'Raja Nahar Singh',     coords: [28.4747, 77.3350] },
+    if (step.travel_mode === 'TRANSIT') {
+      const td = step.transit_details;
 
-  // AIRPORT LINE
-  // New Delhi shared
-  shivaji_stadium:     { name: 'Shivaji Stadium',      coords: [28.6265, 77.2082] },
-  dhaula_kuan:         { name: 'Dhaula Kuan',          coords: [28.5980, 77.1651] },
-  delhi_aerocity:      { name: 'Delhi Aerocity',       coords: [28.5542, 77.1231] },
-  igi_airport:         { name: 'IGI Airport T3',       coords: [28.5570, 77.0882] },
-  // Dwarka Sector 21 shared
-
-  // MAGENTA LINE
-  janakpuri_west_mag:  { name: 'Janakpuri West',       coords: [28.6280, 77.0830] },
-  dashrathpuri:        { name: 'Dashrathpuri',         coords: [28.6155, 77.0940] },
-  palam:               { name: 'Palam',                coords: [28.5996, 77.0882] },
-  sadar_bazar_cantonment: { name: 'Sadar Bazar Cantonment', coords: [28.5874, 77.0908] },
-  terminal_1_igi:      { name: 'Terminal 1 IGI Airport', coords: [28.5701, 77.0869] },
-  shankar_vihar:       { name: 'Shankar Vihar',        coords: [28.5630, 77.0950] },
-  vasant_vihar:        { name: 'Vasant Vihar',         coords: [28.5552, 77.1490] },
-  munirka:             { name: 'Munirka',              coords: [28.5483, 77.1763] },
-  rk_puram:            { name: 'R K Puram',            coords: [28.5588, 77.1890] },
-  iit:                 { name: 'IIT',                  coords: [28.5456, 77.1930] },
-  hauz_khas_mag:       { name: 'Hauz Khas',            coords: [28.5434, 77.2066] },
-  panchsheel_park:     { name: 'Panchsheel Park',      coords: [28.5330, 77.2163] },
-  chirag_delhi:        { name: 'Chirag Delhi',         coords: [28.5268, 77.2260] },
-  greater_kailash:     { name: 'Greater Kailash',      coords: [28.5220, 77.2340] },
-  nehru_enclave:       { name: 'Nehru Enclave',        coords: [28.5340, 77.2493] },
-  kalkaji_mandir_mag:  { name: 'Kalkaji Mandir',       coords: [28.5489, 77.2616] },
-  okhla_vihar:         { name: 'Okhla Vihar',          coords: [28.5568, 77.2760] },
-  jasola_vihar:        { name: 'Jasola Vihar Shaheen Bagh', coords: [28.5445, 77.2861] },
-  kalindi_kunj:        { name: 'Kalindi Kunj',         coords: [28.5361, 77.2964] },
-  okhla_bird_sanctuary:{ name: 'Okhla Bird Sanctuary', coords: [28.5295, 77.3049] },
-  botanical_garden_mag:{ name: 'Botanical Garden',     coords: [28.5561, 77.3083] },
-
-  // PINK LINE
-  majlis_park:         { name: 'Majlis Park',          coords: [28.7235, 77.1787] },
-  azadpur_pink:        { name: 'Azadpur',              coords: [28.7113, 77.1762] },
-  shalimar_bagh:       { name: 'Shalimar Bagh',        coords: [28.7045, 77.1874] },
-  netaji_subhash_place_pink: { name: 'Netaji Subhash Place', coords: [28.6942, 77.1536] },
-  shakurpur:           { name: 'Shakurpur',            coords: [28.6870, 77.1475] },
-  punjabi_bagh_east:   { name: 'Punjabi Bagh East',   coords: [28.6730, 77.1380] },
-  esic_hospital:       { name: 'ESI Hospital',         coords: [28.6640, 77.1280] },
-  rajouri_garden_pink: { name: 'Rajouri Garden',       coords: [28.6471, 77.1219] },
-  mayapuri:            { name: 'Mayapuri',             coords: [28.6367, 77.1184] },
-  naraina_vihar:       { name: 'Naraina Vihar',        coords: [28.6283, 77.1295] },
-  delhi_cantt:         { name: 'Delhi Cantt',          coords: [28.6040, 77.1367] },
-  durgabai_deshmukh:   { name: 'Durgabai Deshmukh South Campus', coords: [28.5908, 77.1848] },
-  sir_vishweshwaraiah: { name: 'Sir Vishweshwaraiah Moti Bagh', coords: [28.5858, 77.1970] },
-  bhikaji_cama_place:  { name: 'Bhikaji Cama Place',  coords: [28.5722, 77.1897] },
-  sarojini_nagar:      { name: 'Sarojini Nagar',       coords: [28.5700, 77.1986] },
-  ina_pink:            { name: 'INA',                  coords: [28.5763, 77.2079] },
-  south_ext:           { name: 'South Extension',      coords: [28.5659, 77.2246] },
-  lajpat_nagar_pink:   { name: 'Lajpat Nagar',         coords: [28.5695, 77.2431] },
-  moolchand_pink:      { name: 'Moolchand',            coords: [28.5626, 77.2399] },
-  hazrat_nizamuddin:   { name: 'Hazrat Nizamuddin',    coords: [28.5894, 77.2594] },
-  ashram:              { name: 'Ashram',               coords: [28.5768, 77.2581] },
-  vinobapuri:          { name: 'Vinobapuri',           coords: [28.5689, 77.2556] },
-  // Lajpat Nagar shared
-  mayur_vihar_1_pink:  { name: 'Mayur Vihar Phase 1 Pocket 1', coords: [28.6065, 77.2927] },
-  mayur_vihar_2:       { name: 'Mayur Vihar Phase 2',  coords: [28.6108, 77.3047] },
-  trilokpuri_sanjay:   { name: 'Trilokpuri Sanjay Lake', coords: [28.6165, 77.3128] },
-  east_vinod_nagar:    { name: 'East Vinod Nagar - Mayur Vihar III', coords: [28.6218, 77.3200] },
-  ip_extension:        { name: 'IP Extension',         coords: [28.6280, 77.3260] },
-  anand_vihar:         { name: 'Anand Vihar',          coords: [28.6450, 77.3165] },
-  karkarduma_pink:     { name: 'Karkarduma',           coords: [28.6500, 77.3070] },
-  karkarduma_court:    { name: 'Karkarduma Court',     coords: [28.6547, 77.3010] },
-  // Welcome shared
-  jagatpuri:           { name: 'Jagatpuri',            coords: [28.6835, 77.2980] },
-  maujpur_babarpur:    { name: 'Maujpur-Babarpur',     coords: [28.6900, 77.2970] },
-  gokulpuri:           { name: 'Gokulpuri',            coords: [28.6960, 77.2960] },
-  johari_enclave:      { name: 'Johari Enclave',       coords: [28.7020, 77.2980] },
-  shiv_vihar:          { name: 'Shiv Vihar',           coords: [28.6940, 77.3295] },
-
-  // RAPID METRO
-  sikanderpur_rapid:   { name: 'Sikanderpur',          coords: [28.4808, 77.0883] },
-  phase_1:             { name: 'Phase 1',              coords: [28.4770, 77.0950] },
-  // Moulsari Avenue
-  moulsari_avenue:     { name: 'Moulsari Avenue',      coords: [28.4735, 77.0996] },
-  belvedere_towers:    { name: 'Belvedere Towers',     coords: [28.4753, 77.0925] },
-  sector_42_43:        { name: 'Sector 42-43',         coords: [28.4635, 77.0822] },
-  sector_53_54:        { name: 'Sector 53-54',         coords: [28.4562, 77.0967] },
-  sector_55_56:        { name: 'Sector 55-56',         coords: [28.4489, 77.1050] },
-
-  // GREY LINE
-  dwarka_grey:         { name: 'Dwarka',               coords: [28.5922, 77.0587] },
-  nangli:              { name: 'Nangli',               coords: [28.5877, 77.0430] },
-  najafgarh:           { name: 'Najafgarh',            coords: [28.6080, 77.0098] },
-  dhansa_bus_stand:    { name: 'Dhansa Bus Stand',     coords: [28.5830, 77.0132] },
-
-  // AQUA LINE (NMRC)
-  noida_sector_51:     { name: 'Sector 51',            coords: [28.6083, 77.3680] },
-  noida_sector_50:     { name: 'Sector 50',            coords: [28.6010, 77.3725] },
-  noida_sector_76:     { name: 'Sector 76',            coords: [28.5953, 77.3790] },
-  noida_sector_101:    { name: 'Sector 101',           coords: [28.5878, 77.3850] },
-  noida_sector_81:     { name: 'Sector 81',            coords: [28.5795, 77.3910] },
-  aqua_noida_sec_83:   { name: 'Sector 83',            coords: [28.5718, 77.3975] },
-  aqua_noida_sec_137:  { name: 'Sector 137',           coords: [28.5633, 77.3988] },
-  aqua_noida_sec_142:  { name: 'Sector 142',           coords: [28.5555, 77.4005] },
-  aqua_noida_sec_143:  { name: 'Sector 143',           coords: [28.5478, 77.4022] },
-  aqua_noida_sec_144:  { name: 'Sector 144',           coords: [28.5400, 77.4040] },
-  aqua_noida_sec_145:  { name: 'Sector 145',           coords: [28.5323, 77.4057] },
-  aqua_noida_sec_146:  { name: 'Sector 146',           coords: [28.5245, 77.4075] },
-  aqua_noida_sec_147:  { name: 'Sector 147',           coords: [28.5167, 77.4092] },
-  aqua_noida_sec_148:  { name: 'Sector 148',           coords: [28.5088, 77.4110] },
-  aqua_knowledge_park_2: { name: 'Knowledge Park II',  coords: [28.5010, 77.4130] },
-  aqua_knowledge_park_3: { name: 'Knowledge Park III', coords: [28.4932, 77.4148] },
-  aqua_depot:          { name: 'Depot Station',        coords: [28.4850, 77.4165] },
-};
-
-const LINES = {
-  yellow: {
-    name: 'Yellow Line', color: '#FFD700', textColor: '#000',
-    stations: [
-      'samaypur_badli','rohini_sector_18_19','haiderpur_badli_mor','jahangirpuri',
-      'adarsh_nagar','azadpur','model_town','gtb_nagar','vishwavidyalaya',
-      'vidhan_sabha','civil_lines','kashmere_gate','chandni_chowk','chawri_bazar',
-      'new_delhi','rajiv_chowk','patel_chowk','central_secretariat','udyog_bhawan',
-      'lok_kalyan_marg','jor_bagh','ina','aiims','green_park','hauz_khas',
-      'malviya_nagar','saket','qutab_minar','chhattarpur','sultanpur','ghitorni',
-      'arjangarh','guru_dronacharya','sikanderpur','mg_road','iffco_chowk','huda_city_centre'
-    ]
-  },
-  red: {
-    name: 'Red Line', color: '#E41E20', textColor: '#fff',
-    stations: [
-      'rithala','rohini_west','rohini_east','pitampura','kohat_enclave',
-      'netaji_subhash_place','keshav_puram','kanhaiya_nagar','inderlok',
-      'shastri_nagar','pratap_nagar','pulbangash','tis_hazari','kashmere_gate',
-      'shastri_park','seelampur','welcome','shahdara','mansarovar_park',
-      'jhilmil','dilshad_garden','shaheed_sthal'
-    ]
-  },
-  blue: {
-    name: 'Blue Line', color: '#1A60AF', textColor: '#fff',
-    stations: [
-      'dwarka_sector_21','dwarka_sector_8','dwarka_sector_9','dwarka_sector_10',
-      'dwarka_sector_11','dwarka_sector_12','dwarka_mor','nawada',
-      'uttam_nagar_west','uttam_nagar_east','janakpuri_west','janakpuri_east',
-      'tilak_nagar','subhash_nagar','tagore_garden','rajouri_garden','ramesh_nagar',
-      'moti_nagar','kirti_nagar','shadipur','patel_nagar','rajendra_place',
-      'karol_bagh','jhandewalan','rajiv_chowk','barakhamba_road','mandi_house',
-      'supreme_court','indraprastha','yamuna_bank','laxmi_nagar','nirman_vihar',
-      'preet_vihar','karkarduma','anand_vihar_isbt','kaushambi','vaishali'
-    ]
-  },
-  blue_b: {
-    name: 'Blue Line (Branch)', color: '#1A60AF', textColor: '#fff',
-    stations: [
-      'yamuna_bank','akshardham','mayur_vihar_1','mayur_vihar_extension',
-      'new_ashok_nagar','noida_sector_15','noida_sector_16','noida_sector_18',
-      'botanical_garden','noida_city_centre','golf_course','noida_sector_34',
-      'noida_sector_52','noida_sector_61','noida_sector_59','noida_sector_62',
-      'noida_electronic_city'
-    ]
-  },
-  green: {
-    name: 'Green Line', color: '#00A651', textColor: '#fff',
-    stations: [
-      'inderlok','ashok_park','punjabi_bagh_west','shivaji_park','madipur',
-      'paschim_vihar_east','paschim_vihar_west','peera_garhi','udyog_nagar',
-      'surajmal_stadium','nangloi','nangloi_railway','rajdhani_park','mundka',
-      'mundka_industrial','ghevra','tikri_kalan','tikri_border','pandit_shree_ram',
-      'bahadurgarh_city','brigadier_hoshiyar'
-    ]
-  },
-  green_b: {
-    name: 'Green Line (Branch)', color: '#00A651', textColor: '#fff',
-    stations: ['kirti_nagar','satguru_ram_singh','ashok_park']
-  },
-  violet: {
-    name: 'Violet Line', color: '#7B2D8B', textColor: '#fff',
-    stations: [
-      'kashmere_gate','lal_qila','jama_masjid','delhi_gate','ito','mandi_house',
-      'janpath','central_secretariat','khan_market','jawaharlal_nehru_stadium',
-      'jangpura','lajpat_nagar','moolchand','kalkaji_mandir','govind_puri',
-      'harkesh_nagar','jasola_apollo','okhla_nsic','mohan_estate','tughlakabad',
-      'badarpur','faridabad_old','neelam_ajronda','bata_chowk','escort_mujesar',
-      'raja_nahar_singh'
-    ]
-  },
-  airport: {
-    name: 'Airport Express', color: '#F26522', textColor: '#fff',
-    stations: ['new_delhi','shivaji_stadium','dhaula_kuan','delhi_aerocity','igi_airport','dwarka_sector_21']
-  },
-  magenta: {
-    name: 'Magenta Line', color: '#BE1E8D', textColor: '#fff',
-    stations: [
-      'janakpuri_west','dashrathpuri','palam','sadar_bazar_cantonment',
-      'terminal_1_igi','shankar_vihar','vasant_vihar','munirka','rk_puram',
-      'iit','hauz_khas','panchsheel_park','chirag_delhi','greater_kailash',
-      'nehru_enclave','kalkaji_mandir','okhla_vihar','jasola_vihar','kalindi_kunj',
-      'okhla_bird_sanctuary','botanical_garden'
-    ]
-  },
-  pink: {
-    name: 'Pink Line', color: '#E9539A', textColor: '#fff',
-    stations: [
-      'majlis_park','azadpur','shalimar_bagh','netaji_subhash_place','shakurpur',
-      'punjabi_bagh_east','esic_hospital','rajouri_garden','mayapuri','naraina_vihar',
-      'delhi_cantt','durgabai_deshmukh','sir_vishweshwaraiah','bhikaji_cama_place',
-      'sarojini_nagar','ina','south_ext','lajpat_nagar','vinobapuri','ashram',
-      'hazrat_nizamuddin','mayur_vihar_1_pink','mayur_vihar_2','trilokpuri_sanjay',
-      'east_vinod_nagar','ip_extension','anand_vihar','karkarduma','karkarduma_court',
-      'welcome','jagatpuri','maujpur_babarpur','gokulpuri','johari_enclave','shiv_vihar'
-    ]
-  },
-  rapid_metro: {
-    name: 'Rapid Metro', color: '#00BFFF', textColor: '#000',
-    stations: ['sikanderpur','phase_1','moulsari_avenue','belvedere_towers','sector_42_43','sector_53_54']
-  },
-  grey: {
-    name: 'Grey Line', color: '#9D9D9D', textColor: '#fff',
-    stations: ['dwarka','nangli','najafgarh','dhansa_bus_stand']
-  },
-  aqua: {
-    name: 'Aqua Line (NMRC)', color: '#00CED1', textColor: '#000',
-    stations: [
-      'noida_sector_51','noida_sector_50','noida_sector_76','noida_sector_101',
-      'noida_sector_81','aqua_noida_sec_83','aqua_noida_sec_137','aqua_noida_sec_142',
-      'aqua_noida_sec_143','aqua_noida_sec_144','aqua_noida_sec_145','aqua_noida_sec_146',
-      'aqua_noida_sec_147','aqua_noida_sec_148','aqua_knowledge_park_2',
-      'aqua_knowledge_park_3','aqua_depot'
-    ]
-  }
-};
-
-// Canonical station IDs for interchange resolution
-// Maps alternate IDs used in line arrays back to canonical STATIONS key
-const STATION_ALIAS = {
-  inderlok_green: 'inderlok',
-  ashok_park_main: 'ashok_park',
-  hauz_khas_mag: 'hauz_khas',
-  kalkaji_mandir_mag: 'kalkaji_mandir',
-  janakpuri_west_mag: 'janakpuri_west',
-  botanical_garden_mag: 'botanical_garden',
-  azadpur_pink: 'azadpur',
-  netaji_subhash_place_pink: 'netaji_subhash_place',
-  rajouri_garden_pink: 'rajouri_garden',
-  ina_pink: 'ina',
-  lajpat_nagar_pink: 'lajpat_nagar',
-  moolchand_pink: 'moolchand',
-  karkarduma_pink: 'karkarduma',
-  mayur_vihar_1_pink: 'mayur_vihar_1',
-  dwarka_grey: 'dwarka',
-  sikanderpur_rapid: 'sikanderpur',
-  kirti_nagar_green: 'kirti_nagar',
-};
-
-// Resolve station alias
-function resolveStation(sid) {
-  return STATION_ALIAS[sid] || sid;
-}
-
-function getStationCoords(sid) {
-  const resolved = resolveStation(sid);
-  return STATIONS[resolved] ? STATIONS[resolved].coords : null;
-}
-
-function getStationName(sid) {
-  const resolved = resolveStation(sid);
-  return STATIONS[resolved] ? STATIONS[resolved].name : sid;
-}
-
-// ============================================================
-// HAVERSINE
-// ============================================================
-function haversineKm(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = (lat2-lat1)*Math.PI/180;
-  const dLng = (lng2-lng1)*Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-// ============================================================
-// MIN HEAP (Dijkstra priority queue)
-// ============================================================
-class MinHeap {
-  constructor() { this.h = []; }
-  push(item) {
-    this.h.push(item);
-    let i = this.h.length - 1;
-    while (i > 0) {
-      const p = (i - 1) >> 1;
-      if (this.h[p].cost <= this.h[i].cost) break;
-      [this.h[p], this.h[i]] = [this.h[i], this.h[p]];
-      i = p;
-    }
-  }
-  pop() {
-    const top = this.h[0];
-    const last = this.h.pop();
-    if (this.h.length > 0) {
-      this.h[0] = last;
-      let i = 0;
-      while (true) {
-        let s = i, l = 2*i+1, r = 2*i+2;
-        if (l < this.h.length && this.h[l].cost < this.h[s].cost) s = l;
-        if (r < this.h.length && this.h[r].cost < this.h[s].cost) s = r;
-        if (s === i) break;
-        [this.h[s], this.h[i]] = [this.h[i], this.h[s]];
-        i = s;
-      }
-    }
-    return top;
-  }
-  get size() { return this.h.length; }
-}
-
-// ============================================================
-// GRAPH BUILDING
-// ============================================================
-function buildGraph() {
-  const graph = {}; // nodeId -> [{to, cost, type, meta}]
-
-  function addEdge(from, to, cost, type, meta={}) {
-    if (!graph[from]) graph[from] = [];
-    graph[from].push({to, cost, type, meta});
-  }
-
-  // Build station→lines map for interchange
-  const stationLines = {}; // canonical stationId -> [lineId]
-  for (const [lineId, line] of Object.entries(LINES)) {
-    for (const sid of line.stations) {
-      const canonical = resolveStation(sid);
-      if (!stationLines[canonical]) stationLines[canonical] = [];
-      if (!stationLines[canonical].includes(lineId)) stationLines[canonical].push(lineId);
-    }
-  }
-
-  // Same-line edges
-  for (const [lineId, line] of Object.entries(LINES)) {
-    for (let i = 0; i < line.stations.length; i++) {
-      const nodeId = `${line.stations[i]}:${lineId}`;
-      if (i > 0) {
-        const prevId = `${line.stations[i-1]}:${lineId}`;
-        addEdge(nodeId, prevId, STOP_INTERVAL_MIN, 'stop', {lineId});
-        addEdge(prevId, nodeId, STOP_INTERVAL_MIN, 'stop', {lineId});
-      }
-    }
-  }
-
-  // Interchange edges
-  for (const [canonical, lines] of Object.entries(stationLines)) {
-    if (lines.length > 1) {
-      // Check if this is a branch junction (lower penalty)
-      const isBranch = (
-        (lines.includes('blue') && lines.includes('blue_b')) ||
-        (lines.includes('green') && lines.includes('green_b'))
-      );
-      const penalty = isBranch ? BRANCH_PENALTY_MIN : INTERCHANGE_PENALTY_MIN;
-
-      // Find all node IDs for this canonical station
-      const nodeIds = [];
-      for (const lineId of lines) {
-        const line = LINES[lineId];
-        for (const sid of line.stations) {
-          if (resolveStation(sid) === canonical) {
-            nodeIds.push(`${sid}:${lineId}`);
-            break;
-          }
-        }
-      }
-      // Connect all pairs
-      for (let i = 0; i < nodeIds.length; i++) {
-        for (let j = 0; j < nodeIds.length; j++) {
-          if (i !== j) addEdge(nodeIds[i], nodeIds[j], penalty, 'interchange', {from: lines[i], to: lines[j], station: canonical});
-        }
-      }
-    }
-  }
-
-  return { graph, stationLines };
-}
-
-// ============================================================
-// NEAREST STATION FINDER
-// ============================================================
-function findNearestStation(lat, lng) {
-  let best = null, bestDist = Infinity;
-  for (const [sid, st] of Object.entries(STATIONS)) {
-    const d = haversineKm(lat, lng, st.coords[0], st.coords[1]);
-    if (d < bestDist) { bestDist = d; best = sid; }
-  }
-  return { stationId: best, distKm: bestDist };
-}
-
-// ============================================================
-// DIJKSTRA
-// ============================================================
-function dijkstra(graph, startNodes, endNodes) {
-  const dist = {};
-  const prev = {};
-  const visited = new Set();
-  const heap = new MinHeap();
-
-  for (const n of startNodes) {
-    dist[n] = 0;
-    heap.push({cost: 0, node: n});
-  }
-
-  while (heap.size > 0) {
-    const {cost, node} = heap.pop();
-    if (visited.has(node)) continue;
-    visited.add(node);
-
-    if (endNodes.has(node)) {
-      const path = [];
-      let cur = node;
-      const seen = new Set();
-      while (cur && !seen.has(cur)) { seen.add(cur); path.unshift(cur); cur = prev[cur]; }
-      return {cost, path};
-    }
-    for (const edge of (graph[node] || [])) {
-      if (visited.has(edge.to)) continue;
-      const nc = cost + edge.cost;
-      if (dist[edge.to] === undefined || nc < dist[edge.to]) {
-        dist[edge.to] = nc;
-        prev[edge.to] = node;
-        heap.push({cost: nc, node: edge.to});
-      }
-    }
-  }
-  return null;
-}
-
-// ============================================================
-// ROUTE PLANNING
-// ============================================================
-function planRoute(originCoords, destCoords) {
-  const {graph, stationLines} = buildGraph();
-
-  const originStation = findNearestStation(originCoords[0], originCoords[1]);
-  const destStation   = findNearestStation(destCoords[0], destCoords[1]);
-
-  if (!originStation.stationId || !destStation.stationId) return null;
-
-  // Start nodes = all line variants of origin station
-  const startNodes = [];
-  const canonical_origin = resolveStation(originStation.stationId);
-  for (const [lineId, line] of Object.entries(LINES)) {
-    for (const sid of line.stations) {
-      if (resolveStation(sid) === canonical_origin) startNodes.push(`${sid}:${lineId}`);
-    }
-  }
-
-  const canonical_dest = resolveStation(destStation.stationId);
-  const endNodeSet = new Set();
-  for (const [lineId, line] of Object.entries(LINES)) {
-    for (const sid of line.stations) {
-      if (resolveStation(sid) === canonical_dest) endNodeSet.add(`${sid}:${lineId}`);
-    }
-  }
-
-  const result = dijkstra(graph, startNodes, endNodeSet);
-  if (!result) return null;
-
-  // Parse path into legs
-  const legs = [];
-
-  // Auto leg 1: home → first station
-  legs.push({
-    type: 'auto',
-    fromName: 'Your location',
-    fromCoords: originCoords,
-    toName: getStationName(originStation.stationId),
-    toCoords: STATIONS[resolveStation(originStation.stationId)].coords,
-    distKm: originStation.distKm
-  });
-
-  // Parse metro path
-  let currentLine = null;
-  let currentStations = [];
-  let i = 0;
-  const path = result.path;
-
-  while (i < path.length) {
-    const [sid, lineId] = path[i].split(':');
-    if (lineId !== currentLine) {
-      if (currentLine && currentStations.length > 1) {
-        const fromSid = currentStations[0];
-        const toSid   = currentStations[currentStations.length-1];
+      // Adjacent TRANSIT steps with no walking between = same-station platform change
+      if (i > 0 && steps[i - 1].travel_mode === 'TRANSIT') {
+        const prevTd = steps[i - 1].transit_details;
         legs.push({
-          type: 'metro',
-          line: currentLine,
-          fromStation: resolveStation(fromSid),
-          toStation: resolveStation(toSid),
-          stations: currentStations.map(s => resolveStation(s)),
-          stops: currentStations.length - 1,
-          durationMin: (currentStations.length - 1) * STOP_INTERVAL_MIN
+          type: 'interchange',
+          at:                 prevTd.arrival_stop.name,
+          fromLineName:       prevTd.line.name || prevTd.line.short_name || 'Metro',
+          fromLineColor:      prevTd.line.color       || '#888888',
+          fromLineTextColor:  prevTd.line.text_color  || '#ffffff',
+          toLineName:         td.line.name || td.line.short_name || 'Metro',
+          toLineColor:        td.line.color       || '#888888',
+          toLineTextColor:    td.line.text_color  || '#ffffff',
+          durationMin: 0
         });
-        // interchange
-        if (i < path.length) {
-          const [nextSid, nextLineId] = path[i].split(':');
-          if (nextLineId && nextLineId !== currentLine) {
-            legs.push({
-              type: 'interchange',
-              at: resolveStation(nextSid),
-              fromLine: currentLine,
-              toLine: nextLineId,
-              durationMin: INTERCHANGE_PENALTY_MIN
-            });
-          }
-        }
       }
-      currentLine = lineId;
-      currentStations = [sid];
-    } else {
-      currentStations.push(sid);
+
+      legs.push({
+        type:          'metro',
+        lineName:      td.line.name || td.line.short_name || 'Metro',
+        lineColor:     td.line.color       || '#888888',
+        lineTextColor: td.line.text_color  || '#ffffff',
+        fromStation:   td.departure_stop.name,
+        toStation:     td.arrival_stop.name,
+        fromCoords:    [td.departure_stop.location.lat, td.departure_stop.location.lng],
+        toCoords:      [td.arrival_stop.location.lat,   td.arrival_stop.location.lng],
+        stops:         td.num_stops,
+        durationMin,
+        headsign:      td.headsign || ''
+      });
+      totalMin += durationMin;
+
+    } else { // WALKING
+      const prevTransit = steps.slice(0, i).reverse().find(s => s.travel_mode === 'TRANSIT');
+      const nextTransit = steps.slice(i + 1).find(s => s.travel_mode === 'TRANSIT');
+
+      if (prevTransit && nextTransit) {
+        // Walking between two transit segments = transfer with walk time
+        const pTd = prevTransit.transit_details;
+        const nTd = nextTransit.transit_details;
+        legs.push({
+          type: 'interchange',
+          at:                pTd.arrival_stop.name,
+          fromLineName:      pTd.line.name || pTd.line.short_name || 'Metro',
+          fromLineColor:     pTd.line.color      || '#888888',
+          fromLineTextColor: pTd.line.text_color || '#ffffff',
+          toLineName:        nTd.line.name || nTd.line.short_name || 'Metro',
+          toLineColor:       nTd.line.color      || '#888888',
+          toLineTextColor:   nTd.line.text_color || '#ffffff',
+          durationMin
+        });
+        totalMin += durationMin;
+      } else {
+        // First or last walking step = auto/Uber leg
+        const isFirst = !prevTransit;
+        legs.push({
+          type:       'auto',
+          fromName:   isFirst ? 'Your location' : prevTransit.transit_details.arrival_stop.name,
+          fromCoords: [step.start_location.lat, step.start_location.lng],
+          toName:     !isFirst ? 'Your destination' : nextTransit.transit_details.departure_stop.name,
+          toCoords:   [step.end_location.lat, step.end_location.lng],
+          distKm,
+          durationMin
+        });
+        totalMin += durationMin;
+      }
     }
-    i++;
-  }
-  // Last segment
-  if (currentLine && currentStations.length > 1) {
-    legs.push({
-      type: 'metro',
-      line: currentLine,
-      fromStation: resolveStation(currentStations[0]),
-      toStation: resolveStation(currentStations[currentStations.length-1]),
-      stations: currentStations.map(s => resolveStation(s)),
-      stops: currentStations.length - 1,
-      durationMin: (currentStations.length - 1) * STOP_INTERVAL_MIN
-    });
   }
 
-  // Auto leg 2: last station → destination
-  legs.push({
-    type: 'auto',
-    fromName: getStationName(destStation.stationId),
-    fromCoords: STATIONS[resolveStation(destStation.stationId)].coords,
-    toName: 'Your destination',
-    toCoords: destCoords,
-    distKm: destStation.distKm
-  });
+  if (legs.length === 0) return null;
 
-  const totalMin = legs.reduce((s, l) => {
-    if (l.type === 'metro') return s + l.durationMin;
-    if (l.type === 'interchange') return s + l.durationMin;
-    if (l.type === 'auto') return s + Math.ceil(l.distKm * 4);
-    return s;
-  }, 0);
+  // Google sometimes omits walking legs when origin/dest is at station entrance.
+  // Ensure first and last legs are always auto so Uber buttons exist.
+  if (legs[0].type !== 'auto') {
+    const fm = legs[0];
+    legs.unshift({ type: 'auto', fromName: 'Your location', fromCoords, toName: fm.fromStation, toCoords: fm.fromCoords, distKm: 0, durationMin: 0 });
+  }
+  if (legs[legs.length - 1].type !== 'auto') {
+    const lm = [...legs].reverse().find(l => l.type === 'metro');
+    legs.push({ type: 'auto', fromName: lm.toStation, fromCoords: lm.toCoords, toName: 'Your destination', toCoords, distKm: 0, durationMin: 0 });
+  }
 
-  return { legs, totalMin, cost: result.cost };
+  return { legs, totalMin };
 }
+
+
 
 // ============================================================
 // GEOCODING
@@ -1341,7 +738,7 @@ async function planJourney() {
     if (!validNCR(fromCoords)) { fromCoords = await geocode(fromAddr); ls(`mm_geocode_${fromAddr}`, fromCoords); }
     if (!validNCR(toCoords))   { toCoords   = await geocode(toAddr);   ls(`mm_geocode_${toAddr}`, toCoords); }
 
-    const route = planRoute(fromCoords, toCoords);
+    const route = await planRoute(fromCoords, toCoords, document.getElementById('journey-time').value);
     if (!route) {
       content.innerHTML = `<div class="no-route"><div class="no-route-icon">🚫</div><div class="no-route-title">No Route Found</div><div class="no-route-sub">Could not find a metro route between these locations. Try adjusting addresses.</div><button class="btn btn-secondary mt-16" onclick="showScreen('screen-journey')">Go Back</button></div>`;
       return;
@@ -1384,36 +781,31 @@ function renderPreview(cr) {
         <div class="leg-info">
           <div class="leg-title">${leg.fromName} → ${leg.toName}</div>
           <div class="leg-detail">Auto/Uber · ~${(leg.distKm*1000).toFixed(0)}m</div>
-          <div class="leg-dur">~${Math.ceil(leg.distKm*4)} min</div>
+          <div class="leg-dur">~${Math.round(leg.durationMin)} min</div>
         </div>
       </div>`;
     } else if (leg.type === 'metro') {
-      const line = LINES[leg.line];
-      const stNames = leg.stations.map(s => getStationName(s));
       html += `<div class="route-leg">
-        <div class="leg-icon" style="background:${line.color};color:${line.textColor}">🚇</div>
+        <div class="leg-icon" style="background:${leg.lineColor};color:${leg.lineTextColor}">🚇</div>
         <div class="leg-info">
-          <div class="leg-title">${getStationName(leg.fromStation)} → ${getStationName(leg.toStation)}</div>
+          <div class="leg-title">${leg.fromStation} → ${leg.toStation}</div>
           <div class="leg-detail">
-            <span class="line-badge" style="background:${line.color};color:${line.textColor}">${line.name}</span>
-            · ${leg.stops} stops
+            <span class="line-badge" style="background:${leg.lineColor};color:${leg.lineTextColor}">${leg.lineName}</span>
+            · ${leg.stops} stops${leg.headsign ? ` · towards ${leg.headsign}` : ''}
           </div>
-          <div class="leg-stops">${stNames.map(n => `<span class="leg-stop-chip">${n}</span>`).join('')}</div>
           <div class="leg-dur">${Math.round(leg.durationMin)} min</div>
         </div>
       </div>`;
     } else if (leg.type === 'interchange') {
-      const fromLine = LINES[leg.fromLine];
-      const toLine   = LINES[leg.toLine];
       html += `<div class="route-leg">
         <div class="leg-icon" style="background:var(--surface2);color:var(--muted)">🔄</div>
         <div class="leg-info">
-          <div class="leg-title">Change at ${getStationName(leg.at)}</div>
+          <div class="leg-title">Change at ${leg.at}</div>
           <div class="leg-detail">
-            <span class="line-badge" style="background:${fromLine.color};color:${fromLine.textColor}">${fromLine.name}</span>
-            → <span class="line-badge" style="background:${toLine.color};color:${toLine.textColor}">${toLine.name}</span>
+            <span class="line-badge" style="background:${leg.fromLineColor};color:${leg.fromLineTextColor}">${leg.fromLineName}</span>
+            → <span class="line-badge" style="background:${leg.toLineColor};color:${leg.toLineTextColor}">${leg.toLineName}</span>
           </div>
-          <div class="leg-dur">${leg.durationMin} min walk</div>
+          <div class="leg-dur">${leg.durationMin > 0 ? leg.durationMin + ' min walk' : 'Platform change'}</div>
         </div>
       </div>`;
     }
@@ -1508,7 +900,7 @@ function renderCommuteScreen() {
     countdownSecs  = remaining;
     countdownTotal = totalSecs;
     countdownLabel = 'Until arrival';
-    ringColor = LINES[lastMetroLeg.line]?.color || '#FFD700';
+    ringColor = lastMetroLeg.lineColor || '#FFD700';
 
     // Trigger Uber booking countdown
     const uberAt = Math.max(0, totalSecs - buffer * 60);
@@ -1523,7 +915,7 @@ function renderCommuteScreen() {
     countdownSecs  = Math.max(0, totalSecs - elapsed);
     countdownTotal = totalSecs;
     countdownLabel = 'Until next stop';
-    ringColor = LINES[leg.line]?.color || '#FFD700';
+    ringColor = leg.lineColor || '#FFD700';
   }
 
   // Ring
@@ -1580,23 +972,22 @@ function renderCommuteScreen() {
       title = `${leg.fromName} → ${leg.toName}`;
       sub   = `Auto/Uber · ~${(leg.distKm*1000).toFixed(0)}m`;
     } else if (leg.type === 'metro') {
-      const line = LINES[leg.line];
-      dotColor = line.color; lineColor = line.color;
-      title = `${getStationName(leg.fromStation)} → ${getStationName(leg.toStation)}`;
-      sub   = `${line.name} · ${leg.stops} stops · ${Math.round(leg.durationMin)} min`;
+      dotColor = leg.lineColor; lineColor = leg.lineColor;
+      title = `${leg.fromStation} → ${leg.toStation}`;
+      sub   = `${leg.lineName} · ${leg.stops} stops · ${Math.round(leg.durationMin)} min`;
 
       const boarded = boardedTimes[i];
       if (boarded) {
         extra = `<div style="margin-top:6px"><span style="color:#00A651;font-weight:600;font-size:13px">✓ Boarded</span></div>`;
       } else if (i === activeLegIdx) {
-        extra = `<button class="board-btn" style="border-color:${line.color}" onclick="boardLeg(${i})">Boarded at ${getStationName(leg.fromStation)} 📍</button>`;
+        extra = `<button class="board-btn" style="border-color:${leg.lineColor}" onclick="boardLeg(${i})">Boarded at ${leg.fromStation} 📍</button>`;
       } else {
-        extra = `<button class="board-btn" style="border-color:#2A2A3A;opacity:0.5" disabled>Board at ${getStationName(leg.fromStation)}</button>`;
+        extra = `<button class="board-btn" style="border-color:#2A2A3A;opacity:0.5" disabled>Board at ${leg.fromStation}</button>`;
       }
     } else if (leg.type === 'interchange') {
       dotColor = '#7070A0'; lineColor = '#2A2A3A';
-      title = `Change at ${getStationName(leg.at)}`;
-      sub   = `${leg.durationMin} min walk · Platform change`;
+      title = `Change at ${leg.at}`;
+      sub   = `${leg.durationMin > 0 ? leg.durationMin + ' min walk' : 'Platform change'}`;
     }
 
     const isActive = i === activeLegIdx;
@@ -1623,7 +1014,7 @@ function renderCommuteScreen() {
       <div class="text-small text-muted" style="margin-bottom:8px;text-align:center">
         ${uberActive ? '📍 Book Uber now for arrival' : `⏱ Uber booking in ${Math.ceil((uberAt - elapsed)/60)} min`}
       </div>
-      ${buildUberButton('Book Uber from ' + getStationName(lastMetroLeg.toStation), STATIONS[resolveStation(lastMetroLeg.toStation)]?.coords, lastAutoLeg.toCoords, uberActive)}
+      ${buildUberButton('Book Uber from ' + lastMetroLeg.toStation, lastMetroLeg.toCoords, lastAutoLeg.toCoords, uberActive)}
     </div>`;
   }
 

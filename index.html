@@ -1,1357 +1,1696 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0A0A0F">
-  <title>MetroMate</title>
-  <style>
-    :root {
-      --yellow:        #FFD700;
-      --yellow-glow:   rgba(255,215,0,0.15);
-      --yellow-border: rgba(255,215,0,0.35);
-      --bg:            #0A0A0F;
-      --surface:       #14141E;
-      --surface2:      #1E1E2E;
-      --border:        #2A2A3E;
-      --text:          #F0F0F8;
-      --muted:         #7070A0;
-      --green:         #00C896;
-      --green-glow:    rgba(0,200,150,0.15);
-      --red:           #FF4D4D;
-      --red-glow:      rgba(255,77,77,0.15);
-      --radius:        14px;
-      --radius-sm:     8px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0A0A0A">
+<title>MetroMate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0A0A0A;
+  --surface: #111116;
+  --surface2: #18181F;
+  --border: #1E1E2A;
+  --text: #F0F0F8;
+  --muted: #7070A0;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --yellow-line: #FFD700;
+  --red-line: #E41E20;
+  --blue-line: #1A60AF;
+  --green-line: #00A651;
+  --violet-line: #7B2D8B;
+  --airport-line: #F26522;
+  --magenta-line: #BE1E8D;
+  --pink-line: #E9539A;
+  --rapid-line: #00BFFF;
+  --grey-line: #9D9D9D;
+  --aqua-line: #00CED1;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg); -webkit-text-size-adjust: 100%; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100dvh; max-width: 480px; margin: 0 auto;
+  -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
+}
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { background: var(--bg); -webkit-text-size-adjust: 100%; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-      background: var(--bg); color: var(--text);
-      min-height: 100dvh; max-width: 480px; margin: 0 auto;
-      -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
-    }
+/* SCREENS */
+.screen { display: none; flex-direction: column; min-height: 100dvh; }
+.screen.active { display: flex; }
 
-    .header {
-      background: var(--surface); border-bottom: 1px solid var(--border);
-      padding: 14px 20px 14px 16px; display: flex; align-items: center;
-      justify-content: space-between; position: sticky; top: 0; z-index: 200;
-      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    }
-    .header-brand { display: flex; align-items: center; gap: 10px; }
-    .header-logo {
-      width: 36px; height: 36px; background: var(--yellow);
-      border-radius: var(--radius-sm); display: grid; place-items: center;
-      font-size: 18px; flex-shrink: 0;
-    }
-    .header-name { font-size: 21px; font-weight: 800; color: var(--yellow); letter-spacing: -0.6px; line-height: 1; }
-    .header-sub  { font-size: 10px; color: var(--muted); letter-spacing: 1.2px; margin-top: 2px; text-transform: uppercase; }
-    .header-nav  {
-      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
-      padding: 8px 16px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
-      cursor: pointer; -webkit-appearance: none; letter-spacing: -0.2px;
-    }
+/* HEADER */
+.header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 14px 20px; display: flex; align-items: center;
+  justify-content: space-between; position: sticky; top: 0; z-index: 200;
+  backdrop-filter: blur(12px);
+}
+.header-brand { display: flex; align-items: center; gap: 10px; }
+.header-logo {
+  width: 36px; height: 36px; background: var(--yellow-line);
+  border-radius: var(--radius-sm); display: grid; place-items: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.header-title { font-family: 'Syne', sans-serif; font-size: 21px; font-weight: 800; color: var(--yellow-line); letter-spacing: -0.5px; }
+.header-btn {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--radius-sm); padding: 8px 14px; font-size: 14px; font-family: 'Inter', sans-serif;
+  cursor: pointer; min-height: 38px;
+}
+.header-btn:active { opacity: 0.7; }
 
-    .screen { display: none; padding: 20px 16px 60px; }
-    .screen.active { display: block; }
+/* CONTENT */
+.content { flex: 1; padding: 20px; overflow-y: auto; }
 
-    .section-label {
-      font-size: 11px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 1.5px; color: var(--yellow); margin-bottom: 12px;
-    }
+/* CARDS */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+}
+.card-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.card-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
 
-    .field { margin-bottom: 16px; }
-    .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
-    .field input {
-      width: 100%; background: var(--surface2); border: 1px solid var(--border);
-      color: var(--text); padding: 15px 16px; border-radius: var(--radius);
-      font-size: 16px; -webkit-appearance: none; appearance: none;
-      font-family: inherit; transition: border-color 0.15s;
-    }
-    .field input:focus { outline: none; border-color: var(--yellow); }
-    .field .hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+/* INPUTS */
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.field input, .field select {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-family: 'Inter', sans-serif;
+  font-size: 15px; padding: 14px 16px; outline: none; min-height: 52px;
+  -webkit-appearance: none; appearance: none;
+}
+.field input:focus, .field select:focus { border-color: var(--yellow-line); }
+.field input::placeholder { color: var(--muted); }
 
-    .key-wrap { display: flex; gap: 8px; }
-    .key-wrap input { flex: 1; font-family: monospace; letter-spacing: 0.5px; }
-    .key-eye {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 0 14px; font-size: 18px;
-      cursor: pointer; color: var(--muted); flex-shrink: 0;
-    }
+/* BUTTONS */
+.btn {
+  display: block; width: 100%; padding: 16px; border-radius: var(--radius);
+  font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600;
+  border: none; cursor: pointer; min-height: 52px; text-align: center;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:active { opacity: 0.8; transform: scale(0.98); }
+.btn-primary { background: var(--yellow-line); color: #000; }
+.btn-secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+.btn-danger { background: #E41E20; color: #fff; }
+.btn + .btn { margin-top: 10px; }
 
-    .setup-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 18px; margin-bottom: 24px;
-    }
-    .setup-section { margin-bottom: 26px; }
+/* LOADING */
+.spinner {
+  width: 28px; height: 28px; border: 3px solid var(--border);
+  border-top-color: var(--yellow-line); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 0 auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-wrap { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 20px; color: var(--muted); font-size: 14px; }
 
-    .rt-stop { display: flex; gap: 14px; align-items: flex-start; }
-    .rt-stop + .rt-stop { margin-top: 0; }
-    .rt-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 28px; }
-    .rt-dot {
-      width: 28px; height: 28px; border-radius: 50%; display: grid;
-      place-items: center; font-size: 13px; font-weight: 700; flex-shrink: 0; z-index: 1;
-    }
-    .rt-dot.home  { background: var(--surface2); border: 2px solid var(--muted); font-size: 15px; }
-    .rt-dot.metro { background: var(--yellow); color: #000; font-size: 11px; }
-    .rt-dot.dest  { background: var(--green); color: #000; font-size: 11px; }
-    .rt-line { width: 2px; flex: 1; min-height: 32px; background: var(--border); }
-    .rt-line.yellow { background: var(--yellow); opacity: 0.5; }
-    .rt-right { padding: 4px 0 28px; flex: 1; }
-    .rt-stop:last-child .rt-right { padding-bottom: 0; }
-    .rt-name { font-size: 15px; font-weight: 600; line-height: 1.2; }
-    .rt-sub  { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+/* TOAST */
+#toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  padding: 12px 20px; border-radius: 100px; font-size: 14px; font-weight: 500;
+  z-index: 9999; transition: transform 0.3s ease; white-space: nowrap;
+  max-width: calc(100vw - 40px); text-align: center;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
 
-    .yl-pill {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: var(--yellow-glow); border: 1px solid var(--yellow-border);
-      border-radius: 5px; padding: 2px 8px; font-size: 11px; font-weight: 600;
-      color: var(--yellow); margin-top: 4px;
-    }
-    .yl-dot { width: 7px; height: 7px; background: var(--yellow); border-radius: 50%; flex-shrink: 0; }
+/* ROUTE PREVIEW */
+.route-leg {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.route-leg:last-child { border-bottom: none; }
+.leg-icon {
+  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 16px; flex-shrink: 0; margin-top: 2px;
+}
+.leg-info { flex: 1; }
+.leg-title { font-size: 15px; font-weight: 600; line-height: 1.3; }
+.leg-detail { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.leg-stops { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.leg-stop-chip {
+  font-size: 11px; padding: 3px 8px; border-radius: 100px;
+  background: var(--surface2); color: var(--muted);
+}
+.leg-stop-chip.interchange { border: 1px solid; }
+.leg-dur { font-size: 13px; font-weight: 600; color: var(--yellow-line); margin-top: 4px; }
 
-    .btn {
-      display: block; width: 100%; padding: 17px 20px; border-radius: var(--radius);
-      border: none; font-size: 16px; font-weight: 700; cursor: pointer;
-      font-family: inherit; letter-spacing: -0.3px; text-align: center;
-      -webkit-appearance: none; transition: opacity 0.12s, transform 0.08s;
-    }
-    .btn:active { opacity: 0.8; transform: scale(0.98); }
-    .btn-save  { background: var(--yellow); color: #000; }
-    .btn-start { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-    .btn-uber  { background: #000; color: #fff; border: 2px solid var(--yellow); font-size: 17px; padding: 19px 20px; }
-    .btn-done  { background: var(--green-glow); color: var(--green); border: 1px solid var(--green); cursor: default; }
-    .btn-done:active { opacity: 1; transform: none; }
-    .btn-urgent { animation: pulse 1.2s ease-in-out infinite; }
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 0 var(--yellow-glow); }
-      50%       { box-shadow: 0 0 0 8px transparent; }
-    }
-    .btn-disabled { opacity: 0.35; pointer-events: none; }
+/* TIMELINE */
+.timeline { position: relative; padding-left: 28px; }
+.timeline-item {
+  position: relative; padding-bottom: 20px;
+}
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-dot {
+  position: absolute; left: -28px; top: 4px;
+  width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--bg);
+}
+.timeline-line {
+  position: absolute; left: -21px; top: 20px;
+  width: 2px; bottom: 0;
+}
+.timeline-item:last-child .timeline-line { display: none; }
+.tl-title { font-size: 15px; font-weight: 600; }
+.tl-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
 
-    .direction-toggle {
-      display: flex; border-radius: var(--radius-sm);
-      border: 1px solid var(--border); overflow: hidden; margin-bottom: 16px;
-    }
-    .dir-btn {
-      flex: 1; padding: 11px 8px; font-size: 13px; font-weight: 600;
-      background: var(--surface2); color: var(--muted); border: none;
-      cursor: pointer; font-family: inherit; transition: background 0.15s, color 0.15s;
-      line-height: 1.3; text-align: center;
-    }
-    .dir-btn + .dir-btn { border-left: 1px solid var(--border); }
-    .dir-btn.active { background: var(--yellow-glow); color: var(--yellow); }
+/* COUNTDOWN RING */
+.countdown-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 24px 0 16px;
+}
+.countdown-ring { position: relative; width: 200px; height: 200px; }
+.countdown-ring svg { transform: rotate(-90deg); }
+.countdown-ring circle.bg { fill: none; stroke: var(--surface2); stroke-width: 10; }
+.countdown-ring circle.fg { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+.countdown-inner {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.countdown-time { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; letter-spacing: -1px; }
+.countdown-label { font-size: 12px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .journey-header { padding: 18px 4px 16px; }
-    .journey-date   { font-size: 12px; color: var(--muted); letter-spacing: 0.4px; }
-    .journey-title  { font-size: 26px; font-weight: 800; letter-spacing: -0.8px; margin-top: 2px; }
+/* ACTIVE LEG CARD */
+.active-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px; margin-bottom: 14px;
+  position: relative; overflow: hidden;
+}
+.active-card-line { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.active-card-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.active-card-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+.active-card-sub { font-size: 14px; color: var(--muted); margin-top: 4px; }
 
-    .route-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 14px 16px; margin-bottom: 18px;
-    }
-    .rc-row { display: flex; align-items: center; gap: 10px; }
-    .rc-dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
-    .rc-dot.home  { background: var(--surface2); border: 2px solid var(--muted); }
-    .rc-dot.metro { background: var(--yellow); }
-    .rc-dot.dest  { background: var(--green); }
-    .rc-name {
-      font-size: 13px; font-weight: 600; flex: 1;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .rc-badge {
-      font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
-      text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;
-    }
-    .rc-badge.api { background: var(--green-glow); color: var(--green); border: 1px solid rgba(0,200,150,0.3); }
-    .rc-badge.est { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
-    .rc-seg {
-      display: flex; align-items: center; padding: 3px 0 3px 26px;
-      font-size: 12px; color: var(--muted); gap: 5px;
-    }
-    .rc-transfer {
-      display: flex; align-items: center; padding: 3px 0 3px 26px;
-      font-size: 12px; color: var(--yellow); gap: 5px;
-    }
+/* UBER BUTTON */
+.uber-btn {
+  background: #000; color: #fff; border: none;
+  border-radius: var(--radius); padding: 16px 20px;
+  font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600;
+  width: 100%; cursor: pointer; min-height: 52px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.uber-btn.active { animation: pulse-uber 1.5s ease-in-out infinite; }
+@keyframes pulse-uber {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,215,0,0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(255,215,0,0); }
+}
+.uber-btn:disabled { opacity: 0.4; cursor: not-allowed; animation: none; }
 
-    .leg-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 18px 18px 16px;
-      margin-bottom: 8px; position: relative; overflow: hidden;
-    }
-    .leg-card::after {
-      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-      width: 4px; background: var(--border); transition: background 0.2s;
-    }
-    .leg-card.state-active::after { background: var(--yellow); }
-    .leg-card.state-ready::after  { background: var(--red); }
-    .leg-card.state-booked::after { background: var(--green); }
-    .leg-card.state-active { border-color: var(--yellow-border); }
-    .leg-card.state-ready  { border-color: rgba(255,77,77,0.35); }
-    .leg-card.state-booked { border-color: rgba(0,200,150,0.35); opacity: 0.72; }
+/* BOARD BTN */
+.board-btn {
+  background: var(--surface2); border: 2px solid; border-radius: var(--radius);
+  padding: 14px 20px; width: 100%; font-family: 'Inter', sans-serif;
+  font-size: 15px; font-weight: 600; cursor: pointer; min-height: 52px;
+  margin-bottom: 10px; color: var(--text);
+}
+.board-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.board-btn.done { border-color: #00A651; color: #00A651; }
 
-    .leg-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .leg-badge {
-      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
-      padding: 3px 9px; border-radius: 5px; background: var(--surface2); color: var(--muted);
-      transition: background 0.2s, color 0.2s;
-    }
-    .leg-card.state-active .leg-badge { background: var(--yellow-glow); color: var(--yellow); }
-    .leg-card.state-ready  .leg-badge { background: var(--red-glow);    color: var(--red); }
-    .leg-card.state-booked .leg-badge { background: var(--green-glow);  color: var(--green); }
-    .leg-icon  { font-size: 22px; }
-    .leg-route { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 2px; }
-    .leg-mode  { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+/* TOGGLE */
+.toggle-row {
+  display: flex; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 4px; margin-bottom: 16px;
+}
+.toggle-btn {
+  flex: 1; padding: 10px; border: none; background: transparent; color: var(--muted);
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+  border-radius: 6px; cursor: pointer; transition: all 0.2s;
+}
+.toggle-btn.active { background: var(--yellow-line); color: #000; font-weight: 600; }
 
-    .timer-block {
-      background: var(--surface2); border-radius: var(--radius-sm);
-      padding: 12px 16px; display: flex; align-items: center;
-      justify-content: space-between; margin-bottom: 14px;
-    }
-    .timer-label { font-size: 12px; color: var(--muted); }
-    .timer-value {
-      font-size: 28px; font-weight: 800; letter-spacing: -1px;
-      font-variant-numeric: tabular-nums; color: var(--yellow); transition: color 0.2s;
-    }
-    .timer-value.urgent { color: var(--red); }
-    .timer-value.done   { color: var(--green); font-size: 22px; }
+/* ANIMATED DOT */
+@keyframes dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.7; }
+}
+.active-dot { animation: dot-pulse 1.5s ease-in-out infinite; }
 
-    .connector { display: flex; align-items: center; gap: 10px; padding: 4px 8px; margin-bottom: 8px; }
-    .connector-line { flex: 1; height: 2px; background: var(--border); }
-    .connector-inner { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .connector-pill {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: var(--yellow-glow); border: 1px solid var(--yellow-border);
-      border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 600;
-      color: var(--yellow); white-space: nowrap;
-    }
-    .connector-transfer {
-      font-size: 11px; color: var(--yellow); opacity: 0.8;
-      background: var(--surface2); border: 1px solid var(--yellow-border);
-      border-radius: 4px; padding: 2px 8px; white-space: nowrap;
-    }
+/* SETTINGS */
+.settings-section { margin-bottom: 24px; }
+.settings-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-size: 12px; }
+.saved-dest {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+.saved-dest-name { flex: 1; font-size: 14px; font-weight: 500; }
+.saved-dest-addr { font-size: 12px; color: var(--muted); }
+.saved-dest-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px; }
 
-    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-    .tag {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 5px; padding: 4px 10px; font-size: 12px; color: var(--muted);
-    }
+/* LINE BADGE */
+.line-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 100px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
 
-    .footer-actions { text-align: center; margin-top: 20px; }
-    .btn-ghost {
-      background: none; border: none; color: var(--muted); font-size: 14px;
-      cursor: pointer; padding: 10px 20px; font-family: inherit;
-      text-decoration: underline; text-underline-offset: 3px;
-    }
+/* HOME SCREEN HERO */
+.hero { padding: 32px 20px 20px; text-align: center; }
+.hero-logo { width: 72px; height: 72px; background: var(--yellow-line); border-radius: 20px; display: grid; place-items: center; font-size: 36px; margin: 0 auto 20px; }
+.hero-title { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; color: var(--yellow-line); margin-bottom: 8px; }
+.hero-sub { font-size: 15px; color: var(--muted); line-height: 1.5; }
 
-    .loading-overlay {
-      position: fixed; inset: 0; background: rgba(10,10,15,0.96);
-      display: none; flex-direction: column; align-items: center;
-      justify-content: center; gap: 18px; z-index: 500;
-      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    }
-    .loading-overlay.visible { display: flex; }
-    .loading-spinner {
-      width: 44px; height: 44px; border: 3px solid var(--border);
-      border-top-color: var(--yellow); border-radius: 50%;
-      animation: spin 0.75s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-step { font-size: 15px; font-weight: 600; color: var(--text); text-align: center; }
-    .loading-sub  { font-size: 12px; color: var(--muted); text-align: center; max-width: 280px; line-height: 1.5; }
+/* INTERCHANGE TAG */
+.interchange-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 100px; padding: 4px 10px; font-size: 12px; color: var(--muted);
+}
 
-    .toast {
-      position: fixed; bottom: 24px; left: 50%;
-      transform: translateX(-50%) translateY(calc(100% + 32px));
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 40px; padding: 12px 22px; font-size: 14px; font-weight: 500;
-      z-index: 999; transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
-      white-space: nowrap; color: var(--text); box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-  </style>
+/* ROUTE SUMMARY BAR */
+.route-summary {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 16px;
+  display: flex; gap: 20px; margin-bottom: 16px;
+}
+.route-summary-item { text-align: center; flex: 1; }
+.route-summary-val { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+.route-summary-key { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+/* STEP INDICATOR */
+.steps { display: flex; gap: 6px; justify-content: center; padding: 12px 0; }
+.step { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+.step.active { background: var(--yellow-line); }
+
+/* NO ROUTE */
+.no-route { text-align: center; padding: 40px 20px; }
+.no-route-icon { font-size: 48px; margin-bottom: 16px; }
+.no-route-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.no-route-sub { font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+/* MORNING/RETURN TOGGLE */
+.mr-toggle {
+  display: flex; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 4px; margin-bottom: 20px;
+}
+.mr-btn {
+  flex: 1; padding: 10px; border: none; background: transparent; color: var(--muted);
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+  border-radius: 6px; cursor: pointer;
+}
+.mr-btn.active { background: var(--yellow-line); color: #000; font-weight: 600; }
+
+/* HELPERS */
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.text-muted { color: var(--muted); }
+.text-small { font-size: 13px; }
+.text-center { text-align: center; }
+.font-syne { font-family: 'Syne', sans-serif; }
+.fw-700 { font-weight: 700; }
+.gold { color: var(--yellow-line); }
+</style>
 </head>
 <body>
 
-<header class="header">
-  <div class="header-brand">
-    <div class="header-logo">🚇</div>
-    <div>
-      <div class="header-name">MetroMate</div>
-      <div class="header-sub">Delhi Commuter</div>
-    </div>
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- SCREEN: HOME SETUP -->
+<div class="screen active" id="screen-home">
+  <div class="hero">
+    <div class="hero-logo">🚇</div>
+    <div class="hero-title">MetroMate</div>
+    <div class="hero-sub">Delhi NCR commute assistant.<br>Set your home to get started.</div>
   </div>
-  <button class="header-nav" id="navBtn" onclick="toggleScreen()">Setup</button>
-</header>
-
-<!-- ── SETUP SCREEN ─────────────────────────────────────────── -->
-<div class="screen" id="setupScreen">
-
-  <div class="section-label" style="margin-top:4px;">Your Route</div>
-
-  <div class="setup-card">
-    <div class="rt-stop">
-      <div class="rt-left"><div class="rt-dot home">🏠</div><div class="rt-line"></div></div>
-      <div class="rt-right">
-        <div class="rt-name" id="rtHomeName">Home</div>
-        <div class="rt-sub">🛺 Auto · Uber pickup at departure time</div>
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Welcome</div>
+      <div class="card-sub">Your home address is saved permanently and used to plan every commute.</div>
+      <div class="field">
+        <label>Home Address</label>
+        <input type="text" id="home-addr-input" placeholder="e.g. 42 Vasant Vihar, New Delhi" autocomplete="off">
       </div>
-    </div>
-    <div class="rt-stop">
-      <div class="rt-left"><div class="rt-dot metro">M</div><div class="rt-line yellow"></div></div>
-      <div class="rt-right">
-        <div class="rt-name">Nearest Metro to Home</div>
-        <div class="rt-sub">Found via Places API · Board Yellow Line</div>
-        <span class="yl-pill"><span class="yl-dot"></span>Travel time + transfers via Directions API</span>
+      <div class="field">
+        <label>Google Maps API Key</label>
+        <input type="text" id="home-api-key" placeholder="AIza..." autocomplete="off">
       </div>
+      <button class="btn btn-primary" onclick="saveHomeAndContinue()">Save &amp; Continue</button>
     </div>
-    <div class="rt-stop">
-      <div class="rt-left"><div class="rt-dot metro">M</div><div class="rt-line"></div></div>
-      <div class="rt-right">
-        <div class="rt-name">Nearest Metro to Destination</div>
-        <div class="rt-sub">🛺 Auto booked here before you arrive</div>
-      </div>
-    </div>
-    <div class="rt-stop">
-      <div class="rt-left"><div class="rt-dot dest">★</div></div>
-      <div class="rt-right" style="padding-bottom:0">
-        <div class="rt-name" id="rtDestName">Destination</div>
-        <div class="rt-sub">🛺 Auto · Uber dropoff</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="setup-section">
-    <div class="section-label">Google Maps API</div>
-    <div class="field">
-      <label>API Key <span style="color:var(--green);font-size:11px">(enables live route data)</span></label>
-      <div class="key-wrap">
-        <input type="password" id="mapsApiKey" placeholder="AIza…" autocomplete="off" spellcheck="false">
-        <button class="key-eye" onclick="toggleKeyVisibility()" type="button">👁</button>
-      </div>
-      <div class="hint">Enable: Geocoding · Places (New) · Directions · Maps JavaScript API</div>
-    </div>
-  </div>
-
-  <div class="setup-section">
-    <div class="section-label">Your Journey</div>
-    <div class="field">
-      <label>Home / start address</label>
-      <input type="text" id="homeAddress" placeholder="e.g. Hamilton Court, Sector 29, Gurgaon"
-             oninput="previewAddress('home', this.value)">
-      <div class="hint">Used as Uber pickup + to find your nearest metro station</div>
-    </div>
-    <div class="field">
-      <label>Destination address</label>
-      <input type="text" id="destAddress" placeholder="e.g. Connaught Place, New Delhi"
-             oninput="previewAddress('dest', this.value)">
-      <div class="hint">Used as Uber dropoff + to find the nearest metro station</div>
-    </div>
-  </div>
-
-  <div class="setup-section">
-    <div class="section-label">Timing</div>
-    <div class="field">
-      <label>Morning departure (Home → Destination)</label>
-      <input type="time" id="departureTime" value="08:20">
-    </div>
-    <div class="field">
-      <label>Evening return departure (Destination → Home)</label>
-      <input type="time" id="returnTime" value="18:00">
-    </div>
-    <div class="field">
-      <label>Uber booking buffer (minutes before metro arrival)</label>
-      <input type="number" id="bufferTime" value="5" min="1" max="15">
-      <div class="hint">Auto is booked this many minutes before you reach the station.</div>
-    </div>
-  </div>
-
-  <button class="btn btn-save" onclick="handleSave()">Save & Resolve Route →</button>
-</div>
-
-<!-- ── COMMUTE SCREEN ───────────────────────────────────────── -->
-<div class="screen" id="commuteScreen">
-
-  <div class="journey-header">
-    <div class="journey-date" id="journeyDate"></div>
-    <div class="journey-title">Today's Commute</div>
-  </div>
-
-  <div class="direction-toggle">
-    <button class="dir-btn active" id="dirOutBtn" onclick="setDirection('out')">🌅 Morning</button>
-    <button class="dir-btn"        id="dirRetBtn" onclick="setDirection('ret')">🌆 Return</button>
-  </div>
-
-  <div class="route-card">
-    <div class="rc-row">
-      <span class="rc-dot home"></span>
-      <span class="rc-name" id="rcStart">Home</span>
-    </div>
-    <div class="rc-seg">🛺 Auto · <span id="rcBoardDrive">–</span></div>
-    <div class="rc-row">
-      <span class="rc-dot metro"></span>
-      <span class="rc-name" id="rcBoardMetro">Origin Metro</span>
-      <span class="rc-badge est" id="rcBoardBadge">est.</span>
-    </div>
-    <div class="rc-seg">
-      <span class="yl-dot"></span>Metro · <span id="rcTransitTime">–</span>
-      &nbsp;<span class="rc-badge est" id="rcTransitBadge">est.</span>
-    </div>
-    <div class="rc-transfer" id="rcTransferRow" style="display:none">
-      🔄 Transfer at <span id="rcTransferStation" style="margin-left:4px;font-weight:700">–</span>
-    </div>
-    <div class="rc-row">
-      <span class="rc-dot metro"></span>
-      <span class="rc-name" id="rcAlightMetro">Destination Metro</span>
-      <span class="rc-badge est" id="rcAlightBadge">est.</span>
-    </div>
-    <div class="rc-seg">🛺 Auto · <span id="rcAlightDrive">–</span></div>
-    <div class="rc-row">
-      <span class="rc-dot dest"></span>
-      <span class="rc-name" id="rcEnd">Destination</span>
-    </div>
-    <div id="rcSameStationWarn" style="display:none;margin-top:10px;padding:8px 10px;background:var(--red-glow);border:1px solid rgba(255,77,77,0.35);border-radius:var(--radius-sm);font-size:12px;color:var(--red);line-height:1.4">
-      ⚠ Both addresses map to the same metro station — no metro leg needed. Book a direct auto.
-    </div>
-  </div>
-
-  <!-- LEG 1: Origin auto (home/dest → board metro) -->
-  <div class="leg-card" id="leg1Card">
-    <div class="leg-head">
-      <span class="leg-badge" id="leg1Badge">Leg 1</span>
-      <span class="leg-icon" id="leg1Icon">🏠</span>
-    </div>
-    <div class="leg-route" id="leg1Route">Home → Metro</div>
-    <div class="leg-mode">🛺 Auto · Departs at <span id="leg1DeptLabel">--:--</span></div>
-
-    <div class="timer-block">
-      <span class="timer-label" id="leg1TimerLabel">Departs in</span>
-      <span class="timer-value" id="leg1Timer">--:--</span>
-    </div>
-
-    <button class="btn" id="leg1Btn" onclick="bookUber(1)">
-      🚗 Book Auto to Metro
-    </button>
-
-    <div class="tags">
-      <span class="tag">Drop: <span id="leg1DropTag">Metro</span></span>
-      <span class="tag" id="leg1DeptTag">At: --:--</span>
-    </div>
-  </div>
-
-  <!-- Metro connector (first segment) -->
-  <div class="connector" id="metroConnector">
-    <div class="connector-line"></div>
-    <div class="connector-inner">
-      <div class="connector-pill">
-        <span class="yl-dot"></span>&nbsp;<span id="connLabel">Yellow Line</span>
-      </div>
-    </div>
-    <div class="connector-line"></div>
-  </div>
-
-  <!-- LEG 2a: First metro segment — only shown when there is a transfer -->
-  <div id="leg2aGroup" style="display:none">
-    <div class="leg-card" id="leg2aCard">
-      <div class="leg-head">
-        <span class="leg-badge" id="leg2aBadge">Leg 2</span>
-        <span class="leg-icon" id="leg2aIcon">🚇</span>
-      </div>
-      <div class="leg-route" id="leg2aRoute">Metro → Transfer</div>
-      <div class="leg-mode" id="leg2aMode">Tap Start when you board</div>
-
-      <div class="timer-block" id="leg2aTimerBlock" style="display:none">
-        <span class="timer-label">Arriving at transfer in</span>
-        <span class="timer-value" id="leg2aTimer">--:--</span>
-      </div>
-
-      <button class="btn btn-start" id="leg2aStartBtn" onclick="startFirstMetro()">
-        ▶ Boarded at <span id="leg2aBoardLabel">Metro</span>
-      </button>
-
-      <button class="btn btn-uber btn-urgent" id="leg2aXferBtn" onclick="startLeg2()" style="display:none">
-        🚇 Board Yellow Line at <span id="leg2aXferLabel">Transfer</span>
-      </button>
-    </div>
-
-    <!-- Transfer connector: 0 min, just walk across -->
-    <div class="connector">
-      <div class="connector-line"></div>
-      <div class="connector-inner">
-        <div class="connector-pill" style="background:var(--surface2);border-color:var(--border);color:var(--muted)">
-          🔄 Transfer at <span id="connXferStation">–</span> · 0 min
-        </div>
-      </div>
-      <div class="connector-line"></div>
-    </div>
-  </div>
-
-  <!-- LEG 2: Second metro segment + destination auto -->
-  <div class="leg-card" id="leg2Card">
-    <div class="leg-head">
-      <span class="leg-badge" id="leg2Badge">Leg 2</span>
-      <span class="leg-icon" id="leg2Icon">🚇</span>
-    </div>
-    <div class="leg-route" id="leg2Route">Metro → Metro</div>
-    <div class="leg-mode" id="leg2Mode">🛺 Auto at arrival station · Press Start when you board</div>
-
-    <div class="timer-block" id="leg2TimerBlock" style="display:none">
-      <span class="timer-label" id="leg2TimerLabel">Book auto in</span>
-      <span class="timer-value" id="leg2Timer">--:--</span>
-    </div>
-
-    <button class="btn btn-start" id="leg2StartBtn" onclick="startLeg2()">
-      ▶ Boarded at <span id="leg2BoardLabel">Metro</span>
-    </button>
-
-    <button class="btn btn-uber btn-urgent" id="leg2UberBtn" onclick="bookUber(2)" style="display:none">
-      🚗 Book Auto at <span id="leg2AlightLabel">Metro</span>
-    </button>
-
-    <div class="tags">
-      <span class="yl-pill"><span class="yl-dot"></span>Yellow Line</span>
-      <span class="tag" id="leg2BufferTag">Buffer: 5 min</span>
-      <span class="tag" id="leg2ArrivalTag">Auto at: ~--</span>
-    </div>
-  </div>
-
-  <div class="footer-actions">
-    <button class="btn-ghost" onclick="resetCommute()">Reset today's commute</button>
   </div>
 </div>
 
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="loading-spinner"></div>
-  <div class="loading-step" id="loadingStep">Resolving route…</div>
-  <div class="loading-sub"  id="loadingSub">Contacting Google Maps APIs</div>
+<!-- SCREEN: JOURNEY PLANNER -->
+<div class="screen" id="screen-journey">
+  <div class="header">
+    <div class="header-brand">
+      <div class="header-logo">🚇</div>
+      <span class="header-title">MetroMate</span>
+    </div>
+    <button class="header-btn" onclick="showScreen('screen-settings')">Settings</button>
+  </div>
+  <div class="content">
+    <div class="mr-toggle" id="mr-toggle">
+      <button class="mr-btn active" id="mr-morning" onclick="setDirection('morning')">Morning ☀️</button>
+      <button class="mr-btn" id="mr-return" onclick="setDirection('return')">Return 🌙</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Plan Journey</div>
+      <div class="card-sub">Where are you heading today?</div>
+      <div class="field">
+        <label>From</label>
+        <input type="text" id="journey-from" placeholder="Home address" readonly style="opacity:0.6">
+      </div>
+      <div class="field">
+        <label>Destination</label>
+        <input type="text" id="journey-dest" placeholder="e.g. Connaught Place, New Delhi" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Departure Time</label>
+        <input type="time" id="journey-time">
+      </div>
+      <div class="field">
+        <label>Uber Buffer (min before arrival)</label>
+        <select id="journey-buffer">
+          <option value="5">5 minutes</option>
+          <option value="7" selected>7 minutes</option>
+          <option value="10">10 minutes</option>
+          <option value="12">12 minutes</option>
+          <option value="15">15 minutes</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="planJourney()">Find Route</button>
+    </div>
+    <div id="saved-dests-section"></div>
+  </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- SCREEN: PREVIEW -->
+<div class="screen" id="screen-preview">
+  <div class="header">
+    <div class="header-brand">
+      <div class="header-logo">🚇</div>
+      <span class="header-title">Route Preview</span>
+    </div>
+    <button class="header-btn" onclick="showScreen('screen-journey')">Back</button>
+  </div>
+  <div class="content" id="preview-content">
+  </div>
+</div>
+
+<!-- SCREEN: COMMUTE -->
+<div class="screen" id="screen-commute">
+  <div class="header">
+    <div class="header-brand">
+      <div class="header-logo">🚇</div>
+      <span class="header-title">Live Commute</span>
+    </div>
+    <button class="header-btn" onclick="endCommute()">End</button>
+  </div>
+  <div class="content" id="commute-content">
+  </div>
+</div>
+
+<!-- SCREEN: SETTINGS -->
+<div class="screen" id="screen-settings">
+  <div class="header">
+    <div class="header-brand">
+      <div class="header-logo">🚇</div>
+      <span class="header-title">Settings</span>
+    </div>
+    <button class="header-btn" onclick="showScreen('screen-journey')">Done</button>
+  </div>
+  <div class="content">
+    <div class="settings-section">
+      <div class="settings-title">Home Address</div>
+      <div class="field">
+        <label>Address</label>
+        <input type="text" id="settings-home" placeholder="Home address" autocomplete="off">
+      </div>
+      <button class="btn btn-secondary" onclick="saveSettingsHome()">Save Home</button>
+    </div>
+    <div class="divider"></div>
+    <div class="settings-section">
+      <div class="settings-title">API Key</div>
+      <div class="field">
+        <label>Google Maps API Key</label>
+        <input type="text" id="settings-api" placeholder="AIza..." autocomplete="off">
+      </div>
+      <button class="btn btn-secondary" onclick="saveSettingsApi()">Save Key</button>
+    </div>
+    <div class="divider"></div>
+    <div class="settings-section">
+      <div class="settings-title">Default Buffer</div>
+      <div class="field">
+        <label>Minutes before arrival to book Uber</label>
+        <select id="settings-buffer">
+          <option value="5">5 minutes</option>
+          <option value="7">7 minutes</option>
+          <option value="10">10 minutes</option>
+          <option value="12">12 minutes</option>
+          <option value="15">15 minutes</option>
+        </select>
+      </div>
+      <button class="btn btn-secondary" onclick="saveSettingsBuffer()">Save Buffer</button>
+    </div>
+    <div class="divider"></div>
+    <div class="settings-section">
+      <div class="settings-title">Saved Destinations (up to 3)</div>
+      <div id="settings-saved-list"></div>
+      <div class="field mt-8">
+        <label>Add Destination</label>
+        <input type="text" id="settings-new-dest" placeholder="Name or address" autocomplete="off">
+      </div>
+      <button class="btn btn-secondary" onclick="addSavedDest()">Add Destination</button>
+    </div>
+    <div class="divider"></div>
+    <button class="btn btn-danger" onclick="resetApp()">Reset App</button>
+  </div>
+</div>
 
 <script>
-const CONFIG = { MAPS_API_KEY: 'YOUR_KEY_HERE' };
+// ============================================================
+// METRO NETWORK DATA
+// ============================================================
 
-const FALLBACK = {
-  transitMin:  20,
-  originMetro: { name: 'Origin Metro (not resolved)', lat: null, lng: null },
-  destMetro:   { name: 'Destination Metro (not resolved)', lat: null, lng: null }
+const STOP_INTERVAL_MIN = 2.22;
+// TODO [DMRC API]: Replace STOP_INTERVAL_MIN with live departure board data
+const INTERCHANGE_PENALTY_MIN = 5;
+const BRANCH_PENALTY_MIN = 2;
+
+const STATIONS = {
+  // YELLOW LINE
+  samaypur_badli:      { name: 'Samaypur Badli',       coords: [28.7305, 77.1379] },
+  rohini_sector_18_19: { name: 'Rohini Sector 18-19',  coords: [28.7283, 77.1467] },
+  haiderpur_badli_mor: { name: 'Haiderpur Badli Mor',  coords: [28.7262, 77.1548] },
+  jahangirpuri:        { name: 'Jahangirpuri',          coords: [28.7268, 77.1619] },
+  adarsh_nagar:        { name: 'Adarsh Nagar',          coords: [28.7215, 77.1673] },
+  azadpur:             { name: 'Azadpur',               coords: [28.7113, 77.1762] },
+  model_town:          { name: 'Model Town',            coords: [28.7032, 77.1882] },
+  gtb_nagar:           { name: 'GTB Nagar',             coords: [28.6960, 77.2020] },
+  vishwavidyalaya:     { name: 'Vishwavidyalaya',       coords: [28.6890, 77.2100] },
+  vidhan_sabha:        { name: 'Vidhan Sabha',          coords: [28.6822, 77.2170] },
+  civil_lines:         { name: 'Civil Lines',           coords: [28.6762, 77.2237] },
+  kashmere_gate:       { name: 'Kashmere Gate',         coords: [28.6672, 77.2291] },
+  chandni_chowk:       { name: 'Chandni Chowk',        coords: [28.6580, 77.2304] },
+  chawri_bazar:        { name: 'Chawri Bazar',          coords: [28.6497, 77.2264] },
+  new_delhi:           { name: 'New Delhi',             coords: [28.6420, 77.2197] },
+  rajiv_chowk:         { name: 'Rajiv Chowk',          coords: [28.6328, 77.2195] },
+  patel_chowk:         { name: 'Patel Chowk',          coords: [28.6248, 77.2151] },
+  central_secretariat: { name: 'Central Secretariat',  coords: [28.6147, 77.2120] },
+  udyog_bhawan:        { name: 'Udyog Bhawan',          coords: [28.6060, 77.2098] },
+  lok_kalyan_marg:     { name: 'Lok Kalyan Marg',      coords: [28.5980, 77.2086] },
+  jor_bagh:            { name: 'Jor Bagh',              coords: [28.5890, 77.2082] },
+  ina:                 { name: 'INA',                   coords: [28.5763, 77.2079] },
+  aiims:               { name: 'AIIMS',                 coords: [28.5678, 77.2090] },
+  green_park:          { name: 'Green Park',            coords: [28.5570, 77.2076] },
+  hauz_khas:           { name: 'Hauz Khas',             coords: [28.5434, 77.2066] },
+  malviya_nagar:       { name: 'Malviya Nagar',         coords: [28.5328, 77.2105] },
+  saket:               { name: 'Saket',                 coords: [28.5217, 77.2163] },
+  qutab_minar:         { name: 'Qutab Minar',          coords: [28.5053, 77.1852] },
+  chhattarpur:         { name: 'Chhattarpur',           coords: [28.4930, 77.1650] },
+  sultanpur:           { name: 'Sultanpur',             coords: [28.4840, 77.1500] },
+  ghitorni:            { name: 'Ghitorni',              coords: [28.4762, 77.1330] },
+  arjangarh:           { name: 'Arjangarh',             coords: [28.4670, 77.1133] },
+  guru_dronacharya:    { name: 'Guru Dronacharya',      coords: [28.4740, 77.0980] },
+  sikanderpur:         { name: 'Sikanderpur',           coords: [28.4808, 77.0883] },
+  mg_road:             { name: 'MG Road',               coords: [28.4760, 77.0783] },
+  iffco_chowk:         { name: 'IFFCO Chowk',          coords: [28.4729, 77.0695] },
+  huda_city_centre:    { name: 'Huda City Centre',     coords: [28.4595, 77.0266] },
+
+  // RED LINE
+  rithala:             { name: 'Rithala',               coords: [28.7237, 77.1063] },
+  rohini_west:         { name: 'Rohini West',           coords: [28.7145, 77.1120] },
+  rohini_east:         { name: 'Rohini East',           coords: [28.7060, 77.1200] },
+  pitampura:           { name: 'Pitampura',             coords: [28.7000, 77.1320] },
+  kohat_enclave:       { name: 'Kohat Enclave',         coords: [28.6970, 77.1410] },
+  netaji_subhash_place:{ name: 'Netaji Subhash Place',  coords: [28.6942, 77.1536] },
+  keshav_puram:        { name: 'Keshav Puram',          coords: [28.6900, 77.1600] },
+  kanhaiya_nagar:      { name: 'Kanhaiya Nagar',        coords: [28.6858, 77.1642] },
+  inderlok:            { name: 'Inderlok',              coords: [28.6778, 77.1684] },
+  shastri_nagar:       { name: 'Shastri Nagar',         coords: [28.6700, 77.1740] },
+  pratap_nagar:        { name: 'Pratap Nagar',          coords: [28.6630, 77.1796] },
+  pulbangash:          { name: 'Pulbangash',            coords: [28.6570, 77.1878] },
+  tis_hazari:          { name: 'Tis Hazari',            coords: [28.6638, 77.2170] },
+  model_town_red:      { name: 'Model Town (Red)',      coords: [28.6720, 77.2220] }, // shared with different name
+  // Kashmere Gate shared
+  shastri_park:        { name: 'Shastri Park',          coords: [28.6720, 77.2510] },
+  seelampur:           { name: 'Seelampur',             coords: [28.6778, 77.2590] },
+  welcome:             { name: 'Welcome',               coords: [28.6779, 77.2883] },
+  shahdara:            { name: 'Shahdara',              coords: [28.6720, 77.2960] },
+  mansarovar_park:     { name: 'Mansarovar Park',       coords: [28.6650, 77.3040] },
+  jhilmil:             { name: 'Jhilmil',               coords: [28.6590, 77.3120] },
+  dilshad_garden:      { name: 'Dilshad Garden',        coords: [28.6520, 77.3180] },
+  shaheed_sthal:       { name: 'Shaheed Sthal / New Bus Adda', coords: [28.6460, 77.3250] },
+
+  // BLUE LINE
+  dwarka_sector_21:    { name: 'Dwarka Sector 21',     coords: [28.5520, 77.0580] },
+  dwarka_sector_8:     { name: 'Dwarka Sector 8',      coords: [28.5620, 77.0680] },
+  dwarka_sector_9:     { name: 'Dwarka Sector 9',      coords: [28.5700, 77.0730] },
+  dwarka_sector_10:    { name: 'Dwarka Sector 10',     coords: [28.5780, 77.0790] },
+  dwarka_sector_11:    { name: 'Dwarka Sector 11',     coords: [28.5860, 77.0850] },
+  dwarka_sector_12:    { name: 'Dwarka Sector 12',     coords: [28.5922, 77.0887] },
+  dwarka:              { name: 'Dwarka',               coords: [28.5922, 77.0587] },
+  dwarka_mor:          { name: 'Dwarka Mor',           coords: [28.6020, 77.0680] },
+  nawada:              { name: 'Nawada',               coords: [28.6109, 77.0780] },
+  uttam_nagar_west:    { name: 'Uttam Nagar West',     coords: [28.6197, 77.0900] },
+  uttam_nagar_east:    { name: 'Uttam Nagar East',     coords: [28.6240, 77.1010] },
+  janakpuri_west:      { name: 'Janakpuri West',       coords: [28.6280, 77.0830] },
+  janakpuri_east:      { name: 'Janakpuri East',       coords: [28.6330, 77.1020] },
+  tilak_nagar:         { name: 'Tilak Nagar',          coords: [28.6380, 77.1160] },
+  subhash_nagar:       { name: 'Subhash Nagar',        coords: [28.6420, 77.1280] },
+  tagore_garden:       { name: 'Tagore Garden',        coords: [28.6450, 77.1390] },
+  rajouri_garden:      { name: 'Rajouri Garden',       coords: [28.6471, 77.1219] },
+  ramesh_nagar:        { name: 'Ramesh Nagar',         coords: [28.6510, 77.1500] },
+  moti_nagar:          { name: 'Moti Nagar',           coords: [28.6540, 77.1620] },
+  kirti_nagar:         { name: 'Kirti Nagar',          coords: [28.6569, 77.1721] },
+  shadipur:            { name: 'Shadipur',             coords: [28.6530, 77.1840] },
+  patel_nagar:         { name: 'Patel Nagar',          coords: [28.6510, 77.1940] },
+  rajendra_place:      { name: 'Rajendra Place',       coords: [28.6480, 77.2040] },
+  karol_bagh:          { name: 'Karol Bagh',           coords: [28.6450, 77.2120] },
+  jhandewalan:         { name: 'Jhandewalan',          coords: [28.6420, 77.2170] },
+  // Rajiv Chowk shared
+  barakhamba_road:     { name: 'Barakhamba Road',      coords: [28.6300, 77.2270] },
+  mandi_house:         { name: 'Mandi House',          coords: [28.6271, 77.2397] },
+  supreme_court:       { name: 'Supreme Court',        coords: [28.6238, 77.2490] },
+  indraprastha:        { name: 'Indraprastha',         coords: [28.6190, 77.2548] },
+  yamuna_bank:         { name: 'Yamuna Bank',          coords: [28.6225, 77.2939] },
+  // Branch from Yamuna Bank to Vaishali
+  laxmi_nagar:         { name: 'Laxmi Nagar',         coords: [28.6323, 77.2783] },
+  nirman_vihar:        { name: 'Nirman Vihar',         coords: [28.6380, 77.2880] },
+  preet_vihar:         { name: 'Preet Vihar',          coords: [28.6440, 77.2980] },
+  karkarduma:          { name: 'Karkarduma',           coords: [28.6500, 77.3070] },
+  anand_vihar_isbt:    { name: 'Anand Vihar ISBT',    coords: [28.6480, 77.3150] },
+  kaushambi:           { name: 'Kaushambi',            coords: [28.6450, 77.3280] },
+  vaishali:            { name: 'Vaishali',             coords: [28.6455, 77.3380] },
+
+  // BLUE BRANCH (Yamuna Bank → Noida Electronic City)
+  akshardham:          { name: 'Akshardham',           coords: [28.6126, 77.2805] },
+  mayur_vihar_1:       { name: 'Mayur Vihar Phase 1',  coords: [28.6065, 77.2927] },
+  mayur_vihar_extension: { name: 'Mayur Vihar Extension', coords: [28.6011, 77.3010] },
+  new_ashok_nagar:     { name: 'New Ashok Nagar',      coords: [28.5962, 77.3083] },
+  noida_sector_15:     { name: 'Noida Sector 15',      coords: [28.5859, 77.3120] },
+  noida_sector_16:     { name: 'Noida Sector 16',      coords: [28.5760, 77.3145] },
+  noida_sector_18:     { name: 'Noida Sector 18',      coords: [28.5700, 77.3225] },
+  botanical_garden:    { name: 'Botanical Garden',     coords: [28.5561, 77.3083] },
+  noida_city_centre:   { name: 'Noida City Centre',    coords: [28.5740, 77.3340] },
+  golf_course:         { name: 'Golf Course',           coords: [28.5640, 77.3420] },
+  noida_sector_34:     { name: 'Noida Sector 34',      coords: [28.5610, 77.3520] },
+  noida_sector_52:     { name: 'Noida Sector 52',      coords: [28.5970, 77.3550] },
+  noida_sector_61:     { name: 'Noida Sector 61',      coords: [28.6060, 77.3650] },
+  noida_sector_59:     { name: 'Noida Sector 59',      coords: [28.5985, 77.3720] },
+  noida_sector_62:     { name: 'Noida Sector 62',      coords: [28.6093, 77.3782] },
+  noida_electronic_city: { name: 'Noida Electronic City', coords: [28.5828, 77.3573] },
+
+  // GREEN LINE
+  inderlok_green:      { name: 'Inderlok',             coords: [28.6778, 77.1684] },
+  ashok_park:          { name: 'Ashok Park Main',      coords: [28.6700, 77.1580] },
+  punjabi_bagh_west:   { name: 'Punjabi Bagh West',    coords: [28.6680, 77.1440] },
+  shivaji_park:        { name: 'Shivaji Park',         coords: [28.6640, 77.1330] },
+  madipur:             { name: 'Madipur',              coords: [28.6620, 77.1220] },
+  paschim_vihar_east:  { name: 'Paschim Vihar East',  coords: [28.6698, 77.1110] },
+  paschim_vihar_west:  { name: 'Paschim Vihar West',  coords: [28.6730, 77.0987] },
+  peera_garhi:         { name: 'Peera Garhi',          coords: [28.6758, 77.0880] },
+  udyog_nagar:         { name: 'Udyog Nagar',          coords: [28.6660, 77.0820] },
+  surajmal_stadium:    { name: 'Surajmal Stadium',     coords: [28.6600, 77.0740] },
+  nangloi:             { name: 'Nangloi',              coords: [28.6520, 77.0680] },
+  nangloi_railway:     { name: 'Nangloi Railway Station', coords: [28.6460, 77.0612] },
+  rajdhani_park:       { name: 'Rajdhani Park',        coords: [28.6410, 77.0560] },
+  mundka:              { name: 'Mundka',               coords: [28.6360, 77.0482] },
+  mundka_industrial:   { name: 'Mundka Industrial Area', coords: [28.6305, 77.0420] },
+  ghevra:              { name: 'Ghevra',               coords: [28.6254, 77.0358] },
+  tikri_kalan:         { name: 'Tikri Kalan',          coords: [28.6200, 77.0278] },
+  tikri_border:        { name: 'Tikri Border',         coords: [28.6143, 77.0210] },
+  pandit_shree_ram:    { name: 'Pandit Shree Ram Sharma', coords: [28.6083, 77.0140] },
+  bahadurgarh_city:    { name: 'Bahadurgarh City Park', coords: [28.6020, 77.0060] },
+  brigadier_hoshiyar:  { name: 'Brigadier Hoshiyar Singh', coords: [28.5978, 76.9998] },
+
+  // GREEN BRANCH (Kirti Nagar → Ashok Park)
+  kirti_nagar_green:   { name: 'Kirti Nagar',          coords: [28.6569, 77.1721] },
+  satguru_ram_singh:   { name: 'Satguru Ram Singh Marg', coords: [28.6630, 77.1650] },
+  ashok_park_main:     { name: 'Ashok Park Main',      coords: [28.6700, 77.1580] },
+
+  // VIOLET LINE
+  // Kashmere Gate shared
+  lal_qila:            { name: 'Lal Qila',             coords: [28.6562, 77.2408] },
+  jama_masjid:         { name: 'Jama Masjid',          coords: [28.6507, 77.2340] },
+  delhi_gate:          { name: 'Delhi Gate',           coords: [28.6437, 77.2393] },
+  ito:                 { name: 'ITO',                  coords: [28.6349, 77.2420] },
+  // Mandi House shared
+  janpath:             { name: 'Janpath',              coords: [28.6224, 77.2163] },
+  // Central Secretariat shared
+  khan_market:         { name: 'Khan Market',          coords: [28.6006, 77.2263] },
+  jawaharlal_nehru_stadium: { name: 'Jawaharlal Nehru Stadium', coords: [28.5857, 77.2367] },
+  jangpura:            { name: 'Jangpura',             coords: [28.5773, 77.2416] },
+  lajpat_nagar:        { name: 'Lajpat Nagar',         coords: [28.5695, 77.2431] },
+  moolchand:           { name: 'Moolchand',            coords: [28.5626, 77.2399] },
+  kalkaji_mandir:      { name: 'Kalkaji Mandir',       coords: [28.5489, 77.2616] },
+  govind_puri:         { name: 'Govind Puri',          coords: [28.5412, 77.2675] },
+  harkesh_nagar:       { name: 'Harkesh Nagar Okhla',  coords: [28.5352, 77.2735] },
+  jasola_apollo:       { name: 'Jasola Apollo',        coords: [28.5300, 77.2810] },
+  okhla_nsic:          { name: 'Okhla NSIC',           coords: [28.5253, 77.2878] },
+  mohan_estate:        { name: 'Mohan Estate',         coords: [28.5182, 77.2944] },
+  tughlakabad:         { name: 'Tughlakabad',           coords: [28.5120, 77.2999] },
+  badarpur:            { name: 'Badarpur Border',      coords: [28.5053, 77.3066] },
+  sarita_vihar:        { name: 'Sarita Vihar',         coords: [28.5265, 77.2948] },
+  faridabad_old:       { name: 'Faridabad Old',        coords: [28.4998, 77.3138] },
+  neelam_ajronda:      { name: 'Neelam Ajronda',       coords: [28.4920, 77.3201] },
+  bata_chowk:          { name: 'Bata Chowk',           coords: [28.4857, 77.3258] },
+  escort_mujesar:      { name: 'Escort Mujesar',       coords: [28.4803, 77.3305] },
+  raja_nahar_singh:    { name: 'Raja Nahar Singh',     coords: [28.4747, 77.3350] },
+
+  // AIRPORT LINE
+  // New Delhi shared
+  shivaji_stadium:     { name: 'Shivaji Stadium',      coords: [28.6265, 77.2082] },
+  dhaula_kuan:         { name: 'Dhaula Kuan',          coords: [28.5980, 77.1651] },
+  delhi_aerocity:      { name: 'Delhi Aerocity',       coords: [28.5542, 77.1231] },
+  igi_airport:         { name: 'IGI Airport T3',       coords: [28.5570, 77.0882] },
+  // Dwarka Sector 21 shared
+
+  // MAGENTA LINE
+  janakpuri_west_mag:  { name: 'Janakpuri West',       coords: [28.6280, 77.0830] },
+  dashrathpuri:        { name: 'Dashrathpuri',         coords: [28.6155, 77.0940] },
+  palam:               { name: 'Palam',                coords: [28.5996, 77.0882] },
+  sadar_bazar_cantonment: { name: 'Sadar Bazar Cantonment', coords: [28.5874, 77.0908] },
+  terminal_1_igi:      { name: 'Terminal 1 IGI Airport', coords: [28.5701, 77.0869] },
+  shankar_vihar:       { name: 'Shankar Vihar',        coords: [28.5630, 77.0950] },
+  vasant_vihar:        { name: 'Vasant Vihar',         coords: [28.5552, 77.1490] },
+  munirka:             { name: 'Munirka',              coords: [28.5483, 77.1763] },
+  rk_puram:            { name: 'R K Puram',            coords: [28.5588, 77.1890] },
+  iit:                 { name: 'IIT',                  coords: [28.5456, 77.1930] },
+  hauz_khas_mag:       { name: 'Hauz Khas',            coords: [28.5434, 77.2066] },
+  panchsheel_park:     { name: 'Panchsheel Park',      coords: [28.5330, 77.2163] },
+  chirag_delhi:        { name: 'Chirag Delhi',         coords: [28.5268, 77.2260] },
+  greater_kailash:     { name: 'Greater Kailash',      coords: [28.5220, 77.2340] },
+  nehru_enclave:       { name: 'Nehru Enclave',        coords: [28.5340, 77.2493] },
+  kalkaji_mandir_mag:  { name: 'Kalkaji Mandir',       coords: [28.5489, 77.2616] },
+  okhla_vihar:         { name: 'Okhla Vihar',          coords: [28.5568, 77.2760] },
+  jasola_vihar:        { name: 'Jasola Vihar Shaheen Bagh', coords: [28.5445, 77.2861] },
+  kalindi_kunj:        { name: 'Kalindi Kunj',         coords: [28.5361, 77.2964] },
+  okhla_bird_sanctuary:{ name: 'Okhla Bird Sanctuary', coords: [28.5295, 77.3049] },
+  botanical_garden_mag:{ name: 'Botanical Garden',     coords: [28.5561, 77.3083] },
+
+  // PINK LINE
+  majlis_park:         { name: 'Majlis Park',          coords: [28.7235, 77.1787] },
+  azadpur_pink:        { name: 'Azadpur',              coords: [28.7113, 77.1762] },
+  shalimar_bagh:       { name: 'Shalimar Bagh',        coords: [28.7045, 77.1874] },
+  netaji_subhash_place_pink: { name: 'Netaji Subhash Place', coords: [28.6942, 77.1536] },
+  shakurpur:           { name: 'Shakurpur',            coords: [28.6870, 77.1475] },
+  punjabi_bagh_east:   { name: 'Punjabi Bagh East',   coords: [28.6730, 77.1380] },
+  esic_hospital:       { name: 'ESI Hospital',         coords: [28.6640, 77.1280] },
+  rajouri_garden_pink: { name: 'Rajouri Garden',       coords: [28.6471, 77.1219] },
+  mayapuri:            { name: 'Mayapuri',             coords: [28.6367, 77.1184] },
+  naraina_vihar:       { name: 'Naraina Vihar',        coords: [28.6283, 77.1295] },
+  delhi_cantt:         { name: 'Delhi Cantt',          coords: [28.6040, 77.1367] },
+  durgabai_deshmukh:   { name: 'Durgabai Deshmukh South Campus', coords: [28.5908, 77.1848] },
+  sir_vishweshwaraiah: { name: 'Sir Vishweshwaraiah Moti Bagh', coords: [28.5858, 77.1970] },
+  bhikaji_cama_place:  { name: 'Bhikaji Cama Place',  coords: [28.5722, 77.1897] },
+  sarojini_nagar:      { name: 'Sarojini Nagar',       coords: [28.5700, 77.1986] },
+  ina_pink:            { name: 'INA',                  coords: [28.5763, 77.2079] },
+  south_ext:           { name: 'South Extension',      coords: [28.5659, 77.2246] },
+  lajpat_nagar_pink:   { name: 'Lajpat Nagar',         coords: [28.5695, 77.2431] },
+  moolchand_pink:      { name: 'Moolchand',            coords: [28.5626, 77.2399] },
+  hazrat_nizamuddin:   { name: 'Hazrat Nizamuddin',    coords: [28.5894, 77.2594] },
+  ashram:              { name: 'Ashram',               coords: [28.5768, 77.2581] },
+  vinobapuri:          { name: 'Vinobapuri',           coords: [28.5689, 77.2556] },
+  // Lajpat Nagar shared
+  mayur_vihar_1_pink:  { name: 'Mayur Vihar Phase 1 Pocket 1', coords: [28.6065, 77.2927] },
+  mayur_vihar_2:       { name: 'Mayur Vihar Phase 2',  coords: [28.6108, 77.3047] },
+  trilokpuri_sanjay:   { name: 'Trilokpuri Sanjay Lake', coords: [28.6165, 77.3128] },
+  east_vinod_nagar:    { name: 'East Vinod Nagar - Mayur Vihar III', coords: [28.6218, 77.3200] },
+  ip_extension:        { name: 'IP Extension',         coords: [28.6280, 77.3260] },
+  anand_vihar:         { name: 'Anand Vihar',          coords: [28.6450, 77.3165] },
+  karkarduma_pink:     { name: 'Karkarduma',           coords: [28.6500, 77.3070] },
+  karkarduma_court:    { name: 'Karkarduma Court',     coords: [28.6547, 77.3010] },
+  // Welcome shared
+  jagatpuri:           { name: 'Jagatpuri',            coords: [28.6835, 77.2980] },
+  maujpur_babarpur:    { name: 'Maujpur-Babarpur',     coords: [28.6900, 77.2970] },
+  gokulpuri:           { name: 'Gokulpuri',            coords: [28.6960, 77.2960] },
+  johari_enclave:      { name: 'Johari Enclave',       coords: [28.7020, 77.2980] },
+  shiv_vihar:          { name: 'Shiv Vihar',           coords: [28.6940, 77.3295] },
+
+  // RAPID METRO
+  sikanderpur_rapid:   { name: 'Sikanderpur',          coords: [28.4808, 77.0883] },
+  phase_1:             { name: 'Phase 1',              coords: [28.4770, 77.0950] },
+  // Moulsari Avenue
+  moulsari_avenue:     { name: 'Moulsari Avenue',      coords: [28.4735, 77.0996] },
+  belvedere_towers:    { name: 'Belvedere Towers',     coords: [28.4753, 77.0925] },
+  sector_42_43:        { name: 'Sector 42-43',         coords: [28.4635, 77.0822] },
+  sector_53_54:        { name: 'Sector 53-54',         coords: [28.4562, 77.0967] },
+  sector_55_56:        { name: 'Sector 55-56',         coords: [28.4489, 77.1050] },
+
+  // GREY LINE
+  dwarka_grey:         { name: 'Dwarka',               coords: [28.5922, 77.0587] },
+  nangli:              { name: 'Nangli',               coords: [28.5877, 77.0430] },
+  najafgarh:           { name: 'Najafgarh',            coords: [28.6080, 77.0098] },
+  dhansa_bus_stand:    { name: 'Dhansa Bus Stand',     coords: [28.5830, 77.0132] },
+
+  // AQUA LINE (NMRC)
+  noida_sector_51:     { name: 'Sector 51',            coords: [28.6083, 77.3680] },
+  noida_sector_50:     { name: 'Sector 50',            coords: [28.6010, 77.3725] },
+  noida_sector_76:     { name: 'Sector 76',            coords: [28.5953, 77.3790] },
+  noida_sector_101:    { name: 'Sector 101',           coords: [28.5878, 77.3850] },
+  noida_sector_81:     { name: 'Sector 81',            coords: [28.5795, 77.3910] },
+  aqua_noida_sec_83:   { name: 'Sector 83',            coords: [28.5718, 77.3975] },
+  aqua_noida_sec_137:  { name: 'Sector 137',           coords: [28.5633, 77.3988] },
+  aqua_noida_sec_142:  { name: 'Sector 142',           coords: [28.5555, 77.4005] },
+  aqua_noida_sec_143:  { name: 'Sector 143',           coords: [28.5478, 77.4022] },
+  aqua_noida_sec_144:  { name: 'Sector 144',           coords: [28.5400, 77.4040] },
+  aqua_noida_sec_145:  { name: 'Sector 145',           coords: [28.5323, 77.4057] },
+  aqua_noida_sec_146:  { name: 'Sector 146',           coords: [28.5245, 77.4075] },
+  aqua_noida_sec_147:  { name: 'Sector 147',           coords: [28.5167, 77.4092] },
+  aqua_noida_sec_148:  { name: 'Sector 148',           coords: [28.5088, 77.4110] },
+  aqua_knowledge_park_2: { name: 'Knowledge Park II',  coords: [28.5010, 77.4130] },
+  aqua_knowledge_park_3: { name: 'Knowledge Park III', coords: [28.4932, 77.4148] },
+  aqua_depot:          { name: 'Depot Station',        coords: [28.4850, 77.4165] },
 };
 
-// ── Maps JS API loader ───────────────────────────────────────
-let _mapsApiPromise = null;
-
-function ensureMapsAPI(apiKey) {
-  if (_mapsApiPromise) return _mapsApiPromise;
-  if (window.google?.maps?.DirectionsService) {
-    _mapsApiPromise = Promise.resolve(); return _mapsApiPromise;
+const LINES = {
+  yellow: {
+    name: 'Yellow Line', color: '#FFD700', textColor: '#000',
+    stations: [
+      'samaypur_badli','rohini_sector_18_19','haiderpur_badli_mor','jahangirpuri',
+      'adarsh_nagar','azadpur','model_town','gtb_nagar','vishwavidyalaya',
+      'vidhan_sabha','civil_lines','kashmere_gate','chandni_chowk','chawri_bazar',
+      'new_delhi','rajiv_chowk','patel_chowk','central_secretariat','udyog_bhawan',
+      'lok_kalyan_marg','jor_bagh','ina','aiims','green_park','hauz_khas',
+      'malviya_nagar','saket','qutab_minar','chhattarpur','sultanpur','ghitorni',
+      'arjangarh','guru_dronacharya','sikanderpur','mg_road','iffco_chowk','huda_city_centre'
+    ]
+  },
+  red: {
+    name: 'Red Line', color: '#E41E20', textColor: '#fff',
+    stations: [
+      'rithala','rohini_west','rohini_east','pitampura','kohat_enclave',
+      'netaji_subhash_place','keshav_puram','kanhaiya_nagar','inderlok',
+      'shastri_nagar','pratap_nagar','pulbangash','tis_hazari','kashmere_gate',
+      'shastri_park','seelampur','welcome','shahdara','mansarovar_park',
+      'jhilmil','dilshad_garden','shaheed_sthal'
+    ]
+  },
+  blue: {
+    name: 'Blue Line', color: '#1A60AF', textColor: '#fff',
+    stations: [
+      'dwarka_sector_21','dwarka_sector_8','dwarka_sector_9','dwarka_sector_10',
+      'dwarka_sector_11','dwarka_sector_12','dwarka_mor','nawada',
+      'uttam_nagar_west','uttam_nagar_east','janakpuri_west','janakpuri_east',
+      'tilak_nagar','subhash_nagar','tagore_garden','rajouri_garden','ramesh_nagar',
+      'moti_nagar','kirti_nagar','shadipur','patel_nagar','rajendra_place',
+      'karol_bagh','jhandewalan','rajiv_chowk','barakhamba_road','mandi_house',
+      'supreme_court','indraprastha','yamuna_bank','laxmi_nagar','nirman_vihar',
+      'preet_vihar','karkarduma','anand_vihar_isbt','kaushambi','vaishali'
+    ]
+  },
+  blue_b: {
+    name: 'Blue Line (Branch)', color: '#1A60AF', textColor: '#fff',
+    stations: [
+      'yamuna_bank','akshardham','mayur_vihar_1','mayur_vihar_extension',
+      'new_ashok_nagar','noida_sector_15','noida_sector_16','noida_sector_18',
+      'botanical_garden','noida_city_centre','golf_course','noida_sector_34',
+      'noida_sector_52','noida_sector_61','noida_sector_59','noida_sector_62',
+      'noida_electronic_city'
+    ]
+  },
+  green: {
+    name: 'Green Line', color: '#00A651', textColor: '#fff',
+    stations: [
+      'inderlok','ashok_park','punjabi_bagh_west','shivaji_park','madipur',
+      'paschim_vihar_east','paschim_vihar_west','peera_garhi','udyog_nagar',
+      'surajmal_stadium','nangloi','nangloi_railway','rajdhani_park','mundka',
+      'mundka_industrial','ghevra','tikri_kalan','tikri_border','pandit_shree_ram',
+      'bahadurgarh_city','brigadier_hoshiyar'
+    ]
+  },
+  green_b: {
+    name: 'Green Line (Branch)', color: '#00A651', textColor: '#fff',
+    stations: ['kirti_nagar','satguru_ram_singh','ashok_park']
+  },
+  violet: {
+    name: 'Violet Line', color: '#7B2D8B', textColor: '#fff',
+    stations: [
+      'kashmere_gate','lal_qila','jama_masjid','delhi_gate','ito','mandi_house',
+      'janpath','central_secretariat','khan_market','jawaharlal_nehru_stadium',
+      'jangpura','lajpat_nagar','moolchand','kalkaji_mandir','govind_puri',
+      'harkesh_nagar','jasola_apollo','okhla_nsic','mohan_estate','tughlakabad',
+      'badarpur','faridabad_old','neelam_ajronda','bata_chowk','escort_mujesar',
+      'raja_nahar_singh'
+    ]
+  },
+  airport: {
+    name: 'Airport Express', color: '#F26522', textColor: '#fff',
+    stations: ['new_delhi','shivaji_stadium','dhaula_kuan','delhi_aerocity','igi_airport','dwarka_sector_21']
+  },
+  magenta: {
+    name: 'Magenta Line', color: '#BE1E8D', textColor: '#fff',
+    stations: [
+      'janakpuri_west','dashrathpuri','palam','sadar_bazar_cantonment',
+      'terminal_1_igi','shankar_vihar','vasant_vihar','munirka','rk_puram',
+      'iit','hauz_khas','panchsheel_park','chirag_delhi','greater_kailash',
+      'nehru_enclave','kalkaji_mandir','okhla_vihar','jasola_vihar','kalindi_kunj',
+      'okhla_bird_sanctuary','botanical_garden'
+    ]
+  },
+  pink: {
+    name: 'Pink Line', color: '#E9539A', textColor: '#fff',
+    stations: [
+      'majlis_park','azadpur','shalimar_bagh','netaji_subhash_place','shakurpur',
+      'punjabi_bagh_east','esic_hospital','rajouri_garden','mayapuri','naraina_vihar',
+      'delhi_cantt','durgabai_deshmukh','sir_vishweshwaraiah','bhikaji_cama_place',
+      'sarojini_nagar','ina','south_ext','lajpat_nagar','vinobapuri','ashram',
+      'hazrat_nizamuddin','mayur_vihar_1_pink','mayur_vihar_2','trilokpuri_sanjay',
+      'east_vinod_nagar','ip_extension','anand_vihar','karkarduma','karkarduma_court',
+      'welcome','jagatpuri','maujpur_babarpur','gokulpuri','johari_enclave','shiv_vihar'
+    ]
+  },
+  rapid_metro: {
+    name: 'Rapid Metro', color: '#00BFFF', textColor: '#000',
+    stations: ['sikanderpur','phase_1','moulsari_avenue','belvedere_towers','sector_42_43','sector_53_54']
+  },
+  grey: {
+    name: 'Grey Line', color: '#9D9D9D', textColor: '#fff',
+    stations: ['dwarka','nangli','najafgarh','dhansa_bus_stand']
+  },
+  aqua: {
+    name: 'Aqua Line (NMRC)', color: '#00CED1', textColor: '#000',
+    stations: [
+      'noida_sector_51','noida_sector_50','noida_sector_76','noida_sector_101',
+      'noida_sector_81','aqua_noida_sec_83','aqua_noida_sec_137','aqua_noida_sec_142',
+      'aqua_noida_sec_143','aqua_noida_sec_144','aqua_noida_sec_145','aqua_noida_sec_146',
+      'aqua_noida_sec_147','aqua_noida_sec_148','aqua_knowledge_park_2',
+      'aqua_knowledge_park_3','aqua_depot'
+    ]
   }
-  _mapsApiPromise = new Promise((resolve, reject) => {
-    window.__mapsReady = resolve;
-    const s = document.createElement('script');
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=__mapsReady&loading=async`;
-    s.onerror = () => { _mapsApiPromise = null; reject(new Error('Maps JS API failed to load')); };
-    document.head.appendChild(s);
-  });
-  return _mapsApiPromise;
+};
+
+// Canonical station IDs for interchange resolution
+// Maps alternate IDs used in line arrays back to canonical STATIONS key
+const STATION_ALIAS = {
+  inderlok_green: 'inderlok',
+  ashok_park_main: 'ashok_park',
+  hauz_khas_mag: 'hauz_khas',
+  kalkaji_mandir_mag: 'kalkaji_mandir',
+  janakpuri_west_mag: 'janakpuri_west',
+  botanical_garden_mag: 'botanical_garden',
+  azadpur_pink: 'azadpur',
+  netaji_subhash_place_pink: 'netaji_subhash_place',
+  rajouri_garden_pink: 'rajouri_garden',
+  ina_pink: 'ina',
+  lajpat_nagar_pink: 'lajpat_nagar',
+  moolchand_pink: 'moolchand',
+  karkarduma_pink: 'karkarduma',
+  mayur_vihar_1_pink: 'mayur_vihar_1',
+  dwarka_grey: 'dwarka',
+  sikanderpur_rapid: 'sikanderpur',
+  kirti_nagar_green: 'kirti_nagar',
+};
+
+// Resolve station alias
+function resolveStation(sid) {
+  return STATION_ALIAS[sid] || sid;
 }
 
-// ── Geocoding ────────────────────────────────────────────────
-async function geocodeAddress(address, apiKey) {
-  const url  = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&region=in&key=${apiKey}`;
-  const res  = await fetch(url);
-  const data = await res.json();
-  if (data.status !== 'OK' || !data.results.length)
-    throw new Error(`"${address}" not found (${data.status})`);
-  const loc = data.results[0].geometry.location;
-  return { lat: loc.lat, lng: loc.lng, formatted: data.results[0].formatted_address };
+function getStationCoords(sid) {
+  const resolved = resolveStation(sid);
+  return STATIONS[resolved] ? STATIONS[resolved].coords : null;
 }
 
-// ── Supported metro station set (Yellow Line + Rapid Metro Gurgaon) ──
-// Rapid Metro connects to Yellow Line at Sikanderpur; including it lets
-// the app correctly use it as an origin/destination station.
-const SUPPORTED_STATIONS = new Set([
-  // DMRC Yellow Line (Line 2)
-  'samaypur badli', 'rohini sector 18-19', 'haiderpur badli mor',
-  'jahangirpuri', 'adarsh nagar', 'azadpur', 'model town', 'gtb nagar',
-  'vishwavidyalaya', 'vidhan sabha', 'civil lines', 'kashmere gate',
-  'chandni chowk', 'chawri bazar', 'chawri bazaar', 'new delhi',
-  'rajiv chowk', 'patel chowk', 'central secretariat', 'udyog bhawan',
-  'lok kalyan marg', 'jor bagh', 'ina', 'aiims', 'green park', 'hauz khas',
-  'malviya nagar', 'saket', 'qutab minar', 'qutb minar', 'chhattarpur',
-  'sultanpur', 'ghitorni', 'arjangarh', 'guru dronacharya', 'sikanderpur',
-  'mg road', 'iffco chowk', 'huda city centre', 'millennium city centre gurugram',
-  'millennium city centre',
-  // Rapid Metro Gurgaon (interchange at Sikanderpur)
-  'belvedere towers', 'sector 42-43', 'sector 42', 'sector 43',
-  'moulsari avenue', 'phase 1', 'phase-1',
-  'sector 53-54', 'sector 53', 'sector 54',
-  'sector 55-56', 'sector 55', 'sector 56'
-]);
-
-function isSupportedStation(rawName) {
-  const clean = rawName.toLowerCase()
-    .replace(/\(.*?\)/g, '').replace(/metro\s*station/g, '')
-    .replace(/\bmetro\b/g, '').replace(/\bstation\b/g, '')
-    .replace(/rapid\b/g, '').replace(/[–—-]+/g, ' ').replace(/\s+/g, ' ').trim();
-  if (SUPPORTED_STATIONS.has(clean)) return true;
-  for (const s of SUPPORTED_STATIONS) {
-    if (clean.includes(s) || s.includes(clean)) return true;
-  }
-  return false;
+function getStationName(sid) {
+  const resolved = resolveStation(sid);
+  return STATIONS[resolved] ? STATIONS[resolved].name : sid;
 }
 
-// ── Rank candidates by driving distance ─────────────────────
-function rankByDrivingDistance(originLat, originLng, places) {
-  return new Promise(resolve => {
-    const fallback = () => {
-      const p = places[0];
-      resolve({ name: p.displayName.text, lat: p.location.latitude, lng: p.location.longitude, driveMin: null });
-    };
-    if (!window.google?.maps?.DistanceMatrixService) { fallback(); return; }
-    new google.maps.DistanceMatrixService().getDistanceMatrix({
-      origins:      [{ lat: originLat, lng: originLng }],
-      destinations: places.map(p => ({ lat: p.location.latitude, lng: p.location.longitude })),
-      travelMode: 'DRIVING', unitSystem: google.maps.UnitSystem.METRIC
-    }, (response, status) => {
-      if (status !== 'OK' || !response?.rows?.[0]) { fallback(); return; }
-      const elements = response.rows[0].elements;
-      const scored = places.map((p, i) => ({
-        name:     p.displayName.text,
-        lat:      p.location.latitude,
-        lng:      p.location.longitude,
-        driveSec: elements[i]?.status === 'OK' ? elements[i].duration.value : Infinity,
-        driveMin: elements[i]?.status === 'OK' ? Math.round(elements[i].duration.value / 60) : null
-      }));
-      scored.sort((a, b) => a.driveSec - b.driveSec);
-      resolve(scored[0]);
-    });
-  });
+// ============================================================
+// HAVERSINE
+// ============================================================
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLng = (lng2-lng1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// ── Nearest Yellow Line metro ────────────────────────────────
-async function findNearestYellowLineMetro(lat, lng, apiKey) {
-  const res = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Goog-Api-Key': apiKey,
-      'X-Goog-FieldMask': 'places.displayName,places.location'
-    },
-    body: JSON.stringify({
-      locationRestriction: { circle: { center: { latitude: lat, longitude: lng }, radius: 8000 } },
-      includedTypes: ['subway_station'], maxResultCount: 10, rankPreference: 'DISTANCE'
-    })
-  });
-  if (!res.ok) throw new Error(`Places API ${res.status}`);
-  const data = await res.json();
-  if (!data.places?.length) throw new Error('No metro station found within 8 km');
-
-  const all = data.places;
-  const supported  = all.filter(p => isSupportedStation(p.displayName.text));
-  const candidates = supported.length > 0 ? supported : all;
-
-  try {
-    await ensureMapsAPI(apiKey);
-    return await rankByDrivingDistance(lat, lng, candidates);
-  } catch {
-    const p = candidates[0];
-    return { name: p.displayName.text, lat: p.location.latitude, lng: p.location.longitude, driveMin: null };
-  }
+// ============================================================
+// MIN HEAP (Dijkstra priority queue)
+// ============================================================
+class MinHeap {
+  constructor() { this.h = []; }
+  push(item) { this.h.push(item); this.h.sort((a,b) => a.cost - b.cost); }
+  pop() { return this.h.shift(); }
+  get size() { return this.h.length; }
 }
 
-// ── Transit directions (per-segment, transfer-aware) ─────────
-// Returns { seg1Min, seg2Min, transfers, transferStation }.
-// seg1Min = first line (Rapid Metro or full journey if direct).
-// seg2Min = second line (Yellow Line after transfer; 0 if direct).
-// Prefers direct; accepts transfer only when it saves >5 min.
-function getTransitDetails(originLat, originLng, destLat, destLng) {
-  return new Promise(resolve => {
-    if (!window.google?.maps?.DirectionsService) { resolve(null); return; }
-    new google.maps.DirectionsService().route({
-      origin:      { lat: originLat, lng: originLng },
-      destination: { lat: destLat,   lng: destLng   },
-      travelMode:  'TRANSIT',
-      provideRouteAlternatives: true
-    }, (result, status) => {
-      if (status !== 'OK' || !result?.routes?.length) { resolve(null); return; }
+// ============================================================
+// GRAPH BUILDING
+// ============================================================
+function buildGraph() {
+  const graph = {}; // nodeId -> [{to, cost, type, meta}]
 
-      const routes = result.routes.map(route => {
-        const steps = route.legs[0].steps.filter(s => s.travel_mode === 'TRANSIT');
-        if (!steps.length) return null;
-        const transfers = steps.length - 1;
-        if (transfers === 0) {
-          return { seg1Min: steps[0].duration.value / 60, seg2Min: 0, transfers: 0, transferStation: null };
-        }
-        return {
-          seg1Min:         steps[0].duration.value / 60,
-          seg2Min:         steps.slice(1).reduce((s, st) => s + st.duration.value, 0) / 60,
-          transfers,
-          transferStation: steps[0].transit.arrival_stop.name
-        };
-      }).filter(Boolean);
-
-      if (!routes.length) { resolve(null); return; }
-
-      const direct   = routes.find(r => r.transfers === 0);
-      const withXfer = routes.filter(r => r.transfers > 0)
-                             .sort((a, b) => (a.seg1Min + a.seg2Min) - (b.seg1Min + b.seg2Min))[0];
-      let chosen;
-      if (!direct)                                                           chosen = withXfer || routes[0];
-      else if (!withXfer)                                                    chosen = direct;
-      else if (direct.seg1Min - (withXfer.seg1Min + withXfer.seg2Min) > 5)  chosen = withXfer;
-      else                                                                   chosen = direct;
-
-      resolve(chosen);
-    });
-  });
-}
-
-// ── Route resolution ─────────────────────────────────────────
-async function resolveRoute() {
-  const key = getApiKey();
-  const r = {
-    homeLat: null, homeLng: null, homeFormatted: null,
-    destLat: null, destLng: null, destFormatted: null,
-    originMetroName: FALLBACK.originMetro.name,
-    originMetroLat:  null,
-    originMetroLng:  null,
-    originSource:    'est', originDriveMin: null,
-    destMetroName:   FALLBACK.destMetro.name,
-    destMetroLat:    null,
-    destMetroLng:    null,
-    destSource:      'est', destDriveMin: null,
-    seg1Min:         FALLBACK.transitMin,
-    seg2Min:         0,
-    transitSrc:      'est',
-    transfers:       0,
-    transferStation: null
-  };
-
-  const hasKey  = key && key !== 'YOUR_KEY_HERE';
-  const homeAddr = localStorage.getItem('mm_homeAddress') || '';
-  const destAddr = localStorage.getItem('mm_destAddress') || '';
-
-  if (!hasKey) {
-    showToast('No API key — using placeholder route data');
-    saveResolvedRoute(r); return;
+  function addEdge(from, to, cost, type, meta={}) {
+    if (!graph[from]) graph[from] = [];
+    graph[from].push({to, cost, type, meta});
   }
 
-  if (homeAddr) {
-    setLoadingStep('Finding home location…', homeAddr);
-    try {
-      const geo = await geocodeAddress(homeAddr, key);
-      r.homeLat = geo.lat; r.homeLng = geo.lng; r.homeFormatted = geo.formatted;
-    } catch (e) { showToast('Home: ' + e.message); }
+  // Build station→lines map for interchange
+  const stationLines = {}; // canonical stationId -> [lineId]
+  for (const [lineId, line] of Object.entries(LINES)) {
+    for (const sid of line.stations) {
+      const canonical = resolveStation(sid);
+      if (!stationLines[canonical]) stationLines[canonical] = [];
+      if (!stationLines[canonical].includes(lineId)) stationLines[canonical].push(lineId);
+    }
   }
 
-  if (destAddr) {
-    setLoadingStep('Finding destination…', destAddr);
-    try {
-      const geo = await geocodeAddress(destAddr, key);
-      r.destLat = geo.lat; r.destLng = geo.lng; r.destFormatted = geo.formatted;
-    } catch (e) { showToast('Destination: ' + e.message); }
-  }
-
-  if (r.homeLat) {
-    setLoadingStep('Finding nearest metro to home…', 'Filtering & ranking by drive time');
-    try {
-      const m = await findNearestYellowLineMetro(r.homeLat, r.homeLng, key);
-      r.originMetroName = m.name; r.originMetroLat = m.lat; r.originMetroLng = m.lng;
-      r.originSource = 'api'; r.originDriveMin = m.driveMin;
-    } catch (e) { showToast('Origin metro: ' + e.message); }
-  }
-
-  if (r.destLat) {
-    setLoadingStep('Finding nearest metro to destination…', 'Filtering & ranking by drive time');
-    try {
-      const m = await findNearestYellowLineMetro(r.destLat, r.destLng, key);
-      r.destMetroName = m.name; r.destMetroLat = m.lat; r.destMetroLng = m.lng;
-      r.destSource = 'api'; r.destDriveMin = m.driveMin;
-    } catch (e) { showToast('Dest metro: ' + e.message); }
-  }
-
-  if (r.originMetroLat && r.destMetroLat) {
-    setLoadingStep('Calculating metro journey…', 'Checking routes & transfers');
-    try {
-      await ensureMapsAPI(key);
-      const t = await getTransitDetails(
-        r.originMetroLat, r.originMetroLng,
-        r.destMetroLat,   r.destMetroLng
-      );
-      if (t) {
-        r.seg1Min = t.seg1Min; r.seg2Min = t.seg2Min;
-        r.transitSrc = 'api';
-        r.transfers = t.transfers; r.transferStation = t.transferStation;
+  // Same-line edges
+  for (const [lineId, line] of Object.entries(LINES)) {
+    for (let i = 0; i < line.stations.length; i++) {
+      const nodeId = `${line.stations[i]}:${lineId}`;
+      if (i > 0) {
+        const prevId = `${line.stations[i-1]}:${lineId}`;
+        addEdge(nodeId, prevId, STOP_INTERVAL_MIN, 'stop', {lineId});
+        addEdge(prevId, nodeId, STOP_INTERVAL_MIN, 'stop', {lineId});
       }
-    } catch (e) { showToast('Directions failed — using estimated times'); }
+    }
   }
 
-  saveResolvedRoute(r);
+  // Interchange edges
+  for (const [canonical, lines] of Object.entries(stationLines)) {
+    if (lines.length > 1) {
+      // Check if this is a branch junction (lower penalty)
+      const isBranch = (
+        (lines.includes('blue') && lines.includes('blue_b')) ||
+        (lines.includes('green') && lines.includes('green_b'))
+      );
+      const penalty = isBranch ? BRANCH_PENALTY_MIN : INTERCHANGE_PENALTY_MIN;
+
+      // Find all node IDs for this canonical station
+      const nodeIds = [];
+      for (const lineId of lines) {
+        const line = LINES[lineId];
+        for (const sid of line.stations) {
+          if (resolveStation(sid) === canonical) {
+            nodeIds.push(`${sid}:${lineId}`);
+            break;
+          }
+        }
+      }
+      // Connect all pairs
+      for (let i = 0; i < nodeIds.length; i++) {
+        for (let j = 0; j < nodeIds.length; j++) {
+          if (i !== j) addEdge(nodeIds[i], nodeIds[j], penalty, 'interchange', {from: lines[i], to: lines[j], station: canonical});
+        }
+      }
+    }
+  }
+
+  return { graph, stationLines };
 }
 
-// ── Resolved route storage ───────────────────────────────────
-function getResolvedRoute() {
-  const n = k => localStorage.getItem(k);
-  const f = k => { const v = parseFloat(localStorage.getItem(k)); return isNaN(v) ? null : v; };
-  const i = k => { const v = parseInt(localStorage.getItem(k));   return isNaN(v) ? 0    : v; };
-  return {
-    homeFormatted:   n('mm_rHomeFormatted') || '',
-    homeLat:         f('mm_rHomeLat'),
-    homeLng:         f('mm_rHomeLng'),
-    destFormatted:   n('mm_rDestFormatted') || '',
-    destLat:         f('mm_rDestLat'),
-    destLng:         f('mm_rDestLng'),
-    originMetroName: n('mm_rOriginName')    || FALLBACK.originMetro.name,
-    originMetroLat:  f('mm_rOriginLat'),
-    originMetroLng:  f('mm_rOriginLng'),
-    originSource:    n('mm_rOriginSrc')     || 'est',
-    originDriveMin:  f('mm_rOriginDrvMin'),
-    destMetroName:   n('mm_rDestMetroName') || FALLBACK.destMetro.name,
-    destMetroLat:    f('mm_rDestMetroLat'),
-    destMetroLng:    f('mm_rDestMetroLng'),
-    destSource:      n('mm_rDestSrc')       || 'est',
-    destDriveMin:    f('mm_rDestDrvMin'),
-    seg1Min:         f('mm_rSeg1Min')        || FALLBACK.transitMin,
-    seg2Min:         f('mm_rSeg2Min')        || 0,
-    transitSrc:      n('mm_rTransitSrc')    || 'est',
-    transfers:       i('mm_rTransfers'),
-    transferStation: n('mm_rTransferStation')
-  };
+// ============================================================
+// NEAREST STATION FINDER
+// ============================================================
+function findNearestStation(lat, lng) {
+  let best = null, bestDist = Infinity;
+  for (const [sid, st] of Object.entries(STATIONS)) {
+    const d = haversineKm(lat, lng, st.coords[0], st.coords[1]);
+    if (d < bestDist) { bestDist = d; best = sid; }
+  }
+  return { stationId: best, distKm: bestDist };
 }
 
-function saveResolvedRoute(r) {
-  const pairs = {
-    mm_rHomeFormatted: r.homeFormatted, mm_rHomeLat: r.homeLat, mm_rHomeLng: r.homeLng,
-    mm_rDestFormatted: r.destFormatted, mm_rDestLat: r.destLat, mm_rDestLng: r.destLng,
-    mm_rOriginName:    r.originMetroName, mm_rOriginLat: r.originMetroLat, mm_rOriginLng: r.originMetroLng,
-    mm_rOriginSrc:     r.originSource, mm_rOriginDrvMin: r.originDriveMin,
-    mm_rDestMetroName: r.destMetroName, mm_rDestMetroLat: r.destMetroLat, mm_rDestMetroLng: r.destMetroLng,
-    mm_rDestSrc:       r.destSource, mm_rDestDrvMin: r.destDriveMin,
-    mm_rSeg1Min:       r.seg1Min, mm_rSeg2Min: r.seg2Min,
-    mm_rTransitSrc:    r.transitSrc,
-    mm_rTransfers:     r.transfers, mm_rTransferStation: r.transferStation
-  };
-  Object.entries(pairs).forEach(([k, v]) => {
-    if (v != null) localStorage.setItem(k, v);
-    else           localStorage.removeItem(k);
+// ============================================================
+// DIJKSTRA
+// ============================================================
+function dijkstra(graph, startNodes, endNodes) {
+  const dist = {};
+  const prev = {};
+  const heap = new MinHeap();
+
+  for (const n of startNodes) {
+    dist[n] = 0;
+    heap.push({cost: 0, node: n});
+  }
+
+  while (heap.size > 0) {
+    const {cost, node} = heap.pop();
+    if (cost > (dist[node] || Infinity)) continue;
+    if (endNodes.has(node)) {
+      // Reconstruct path
+      const path = [];
+      let cur = node;
+      while (cur) { path.unshift(cur); cur = prev[cur]; }
+      return {cost, path};
+    }
+    for (const edge of (graph[node] || [])) {
+      const nc = cost + edge.cost;
+      if (nc < (dist[edge.to] || Infinity)) {
+        dist[edge.to] = nc;
+        prev[edge.to] = node;
+        heap.push({cost: nc, node: edge.to});
+      }
+    }
+  }
+  return null;
+}
+
+// ============================================================
+// ROUTE PLANNING
+// ============================================================
+function planRoute(originCoords, destCoords) {
+  const {graph, stationLines} = buildGraph();
+
+  const originStation = findNearestStation(originCoords[0], originCoords[1]);
+  const destStation   = findNearestStation(destCoords[0], destCoords[1]);
+
+  if (!originStation.stationId || !destStation.stationId) return null;
+
+  // Start nodes = all line variants of origin station
+  const startNodes = [];
+  const canonical_origin = resolveStation(originStation.stationId);
+  for (const [lineId, line] of Object.entries(LINES)) {
+    for (const sid of line.stations) {
+      if (resolveStation(sid) === canonical_origin) startNodes.push(`${sid}:${lineId}`);
+    }
+  }
+
+  const canonical_dest = resolveStation(destStation.stationId);
+  const endNodeSet = new Set();
+  for (const [lineId, line] of Object.entries(LINES)) {
+    for (const sid of line.stations) {
+      if (resolveStation(sid) === canonical_dest) endNodeSet.add(`${sid}:${lineId}`);
+    }
+  }
+
+  const result = dijkstra(graph, startNodes, endNodeSet);
+  if (!result) return null;
+
+  // Parse path into legs
+  const legs = [];
+
+  // Auto leg 1: home → first station
+  legs.push({
+    type: 'auto',
+    fromName: 'Your location',
+    fromCoords: originCoords,
+    toName: getStationName(originStation.stationId),
+    toCoords: STATIONS[resolveStation(originStation.stationId)].coords,
+    distKm: originStation.distKm
   });
-}
 
-// ── Active journey (direction-aware) ────────────────────────
-function normStation(name) {
-  return (name || '').toLowerCase()
-    .replace(/metro\s*station/g, '').replace(/\bmetro\b/g, '')
-    .replace(/\bstation\b/g, '').replace(/\s+/g, ' ').trim();
-}
+  // Parse metro path
+  let currentLine = null;
+  let currentStations = [];
+  let i = 0;
+  const path = result.path;
 
-function getActiveJourney() {
-  const rr  = getResolvedRoute();
-  const s   = getSettings();
-  const dir = localStorage.getItem('mm_direction') || 'out';
-
-  if (dir === 'out') {
-    return build({
-      startName:       rr.homeFormatted  || s.homeAddress || 'Home',
-      startLat:        rr.homeLat, startLng: rr.homeLng,
-      boardMetroName:  rr.originMetroName,
-      boardMetroLat:   rr.originMetroLat, boardMetroLng: rr.originMetroLng,
-      boardMetroSrc:   rr.originSource,   boardDriveMin: rr.originDriveMin,
-      alightMetroName: rr.destMetroName,
-      alightMetroLat:  rr.destMetroLat,   alightMetroLng: rr.destMetroLng,
-      alightMetroSrc:  rr.destSource,     alightDriveMin: rr.destDriveMin,
-      endName:         rr.destFormatted   || s.destAddress || 'Destination',
-      endLat:          rr.destLat,  endLng: rr.destLng,
-      deptTime:        s.departureTime
+  while (i < path.length) {
+    const [sid, lineId] = path[i].split(':');
+    if (lineId !== currentLine) {
+      if (currentLine && currentStations.length > 1) {
+        const fromSid = currentStations[0];
+        const toSid   = currentStations[currentStations.length-1];
+        legs.push({
+          type: 'metro',
+          line: currentLine,
+          fromStation: resolveStation(fromSid),
+          toStation: resolveStation(toSid),
+          stations: currentStations.map(s => resolveStation(s)),
+          stops: currentStations.length - 1,
+          durationMin: (currentStations.length - 1) * STOP_INTERVAL_MIN
+        });
+        // interchange
+        if (i < path.length) {
+          const [nextSid, nextLineId] = path[i].split(':');
+          if (nextLineId && nextLineId !== currentLine) {
+            legs.push({
+              type: 'interchange',
+              at: resolveStation(nextSid),
+              fromLine: currentLine,
+              toLine: nextLineId,
+              durationMin: INTERCHANGE_PENALTY_MIN
+            });
+          }
+        }
+      }
+      currentLine = lineId;
+      currentStations = [sid];
+    } else {
+      currentStations.push(sid);
+    }
+    i++;
+  }
+  // Last segment
+  if (currentLine && currentStations.length > 1) {
+    legs.push({
+      type: 'metro',
+      line: currentLine,
+      fromStation: resolveStation(currentStations[0]),
+      toStation: resolveStation(currentStations[currentStations.length-1]),
+      stations: currentStations.map(s => resolveStation(s)),
+      stops: currentStations.length - 1,
+      durationMin: (currentStations.length - 1) * STOP_INTERVAL_MIN
     });
+  }
+
+  // Auto leg 2: last station → destination
+  legs.push({
+    type: 'auto',
+    fromName: getStationName(destStation.stationId),
+    fromCoords: STATIONS[resolveStation(destStation.stationId)].coords,
+    toName: 'Your destination',
+    toCoords: destCoords,
+    distKm: destStation.distKm
+  });
+
+  const totalMin = legs.reduce((s, l) => {
+    if (l.type === 'metro') return s + l.durationMin;
+    if (l.type === 'interchange') return s + l.durationMin;
+    if (l.type === 'auto') return s + Math.ceil(l.distKm * 4);
+    return s;
+  }, 0);
+
+  return { legs, totalMin, cost: result.cost };
+}
+
+// ============================================================
+// GEOCODING
+// ============================================================
+async function geocode(address) {
+  const key = ls('mm_mapsApiKey') || '';
+  if (!key) throw new Error('No API key set. Add it in Settings.');
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${key}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (data.status !== 'OK') throw new Error(`Geocoding failed: ${data.status}`);
+  const loc = data.results[0].geometry.location;
+  return [loc.lat, loc.lng];
+}
+
+// ============================================================
+// LOCAL STORAGE HELPERS
+// ============================================================
+function ls(key, val) {
+  if (val === undefined) {
+    try { return JSON.parse(localStorage.getItem(key)); } catch { return localStorage.getItem(key); }
   } else {
-    return build({
-      startName:       rr.destFormatted   || s.destAddress || 'Destination',
-      startLat:        rr.destLat,  startLng: rr.destLng,
-      boardMetroName:  rr.destMetroName,
-      boardMetroLat:   rr.destMetroLat,   boardMetroLng: rr.destMetroLng,
-      boardMetroSrc:   rr.destSource,     boardDriveMin: rr.destDriveMin,
-      alightMetroName: rr.originMetroName,
-      alightMetroLat:  rr.originMetroLat, alightMetroLng: rr.originMetroLng,
-      alightMetroSrc:  rr.originSource,   alightDriveMin: rr.originDriveMin,
-      endName:         rr.homeFormatted   || s.homeAddress || 'Home',
-      endLat:          rr.homeLat,  endLng: rr.homeLng,
-      deptTime:        s.returnTime || '18:00'
-    });
-  }
-
-  function build(j) {
-    j.seg1Min         = rr.seg1Min;
-    j.seg2Min         = rr.seg2Min;
-    j.transitSrc      = rr.transitSrc;
-    j.transfers       = rr.transfers;
-    j.transferStation = rr.transferStation;
-    j.sameStation     = normStation(j.boardMetroName) === normStation(j.alightMetroName);
-    return j;
+    localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
   }
 }
 
-// ── Settings ─────────────────────────────────────────────────
-function getApiKey() {
-  return (localStorage.getItem('mm_mapsApiKey') || CONFIG.MAPS_API_KEY || '').trim();
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), dur);
 }
 
-function getSettings() {
-  return {
-    departureTime: localStorage.getItem('mm_departureTime') || '08:20',
-    returnTime:    localStorage.getItem('mm_returnTime')    || '18:00',
-    bufferTime:    parseInt(localStorage.getItem('mm_bufferTime') || '5'),
-    homeAddress:   localStorage.getItem('mm_homeAddress') || '',
-    destAddress:   localStorage.getItem('mm_destAddress') || ''
-  };
+// ============================================================
+// SCREEN MANAGEMENT
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
 }
 
-async function handleSave() {
-  const dept  = document.getElementById('departureTime').value;
-  const ret   = document.getElementById('returnTime').value;
-  const buf   = parseInt(document.getElementById('bufferTime').value) || 5;
-  const home  = document.getElementById('homeAddress').value.trim();
-  const dest  = document.getElementById('destAddress').value.trim();
-  const key   = document.getElementById('mapsApiKey').value.trim();
+// ============================================================
+// APP STATE
+// ============================================================
+let appDirection = 'morning'; // 'morning' | 'return'
+let currentRoute = null;
+let commuteState = null; // {legs, legIndex, legPhase, startTime, boardedTime, timers:[]}
 
-  if (!dept) { showToast('Please set a departure time'); return; }
-
-  localStorage.setItem('mm_departureTime', dept);
-  localStorage.setItem('mm_returnTime',    ret);
-  localStorage.setItem('mm_bufferTime',    buf);
-  localStorage.setItem('mm_homeAddress',   home);
-  localStorage.setItem('mm_destAddress',   dest);
-  if (key) localStorage.setItem('mm_mapsApiKey', key);
-
-  showLoading();
-  try { await resolveRoute(); } finally { hideLoading(); }
-
-  showToast('Route saved ✓');
-  showScreen('commute');
+// ============================================================
+// HOME SCREEN
+// ============================================================
+function saveHomeAndContinue() {
+  const addr = document.getElementById('home-addr-input').value.trim();
+  const key  = document.getElementById('home-api-key').value.trim();
+  if (!addr) { showToast('Please enter your home address'); return; }
+  ls('mm_homeAddress', addr);
+  if (key) ls('mm_mapsApiKey', key);
+  showToast('Home saved!');
+  initJourneyScreen();
+  showScreen('screen-journey');
 }
 
-function populateForm() {
-  const s = getSettings();
-  document.getElementById('departureTime').value = s.departureTime;
-  document.getElementById('returnTime').value    = s.returnTime;
-  document.getElementById('bufferTime').value    = s.bufferTime;
-  document.getElementById('homeAddress').value   = s.homeAddress;
-  document.getElementById('destAddress').value   = s.destAddress;
-  document.getElementById('mapsApiKey').value    = localStorage.getItem('mm_mapsApiKey') || '';
-  previewAddress('home', s.homeAddress);
-  previewAddress('dest', s.destAddress);
-}
+// ============================================================
+// JOURNEY SCREEN
+// ============================================================
+function initJourneyScreen() {
+  const home = ls('mm_homeAddress') || '';
+  const dir  = appDirection;
+  const fld  = document.getElementById('journey-from');
+  fld.value  = dir === 'morning' ? home : (ls('mm_lastDest') || '');
 
-function previewAddress(which, val) {
-  const short = val.length > 28 ? val.slice(0,28)+'…' : val;
-  document.getElementById(which === 'home' ? 'rtHomeName' : 'rtDestName').textContent = short || (which === 'home' ? 'Home' : 'Destination');
-}
+  const destFld = document.getElementById('journey-dest');
+  if (dir === 'return') destFld.value = home;
+  else destFld.value = ls('mm_lastDest') || '';
 
-function toggleKeyVisibility() {
-  const inp = document.getElementById('mapsApiKey');
-  inp.type = inp.type === 'password' ? 'text' : 'password';
-}
+  // Set default time
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + 5);
+  document.getElementById('journey-time').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-// ── Commute state ────────────────────────────────────────────
-// sm1: first metro segment (Rapid Metro) — waiting/active/arrived
-// leg2: second metro + auto — waiting/active/ready/booked
-// When no transfer: sm1 stays 'waiting' (unused); leg2 covers the full metro journey.
-function getState() {
-  return {
-    leg1:     localStorage.getItem('mm_s1')  || 'waiting',
-    sm1:      localStorage.getItem('mm_sm1') || 'waiting',
-    sm1Start: localStorage.getItem('mm_tm1') ? Number(localStorage.getItem('mm_tm1')) : null,
-    leg2:     localStorage.getItem('mm_s2')  || 'waiting',
-    leg2Start:localStorage.getItem('mm_t2')  ? Number(localStorage.getItem('mm_t2'))  : null
-  };
-}
+  // Buffer
+  const buf = ls('mm_buffer') || '7';
+  document.getElementById('journey-buffer').value = buf;
 
-function setState(patch) {
-  const next = { ...getState(), ...patch };
-  localStorage.setItem('mm_s1',  next.leg1);
-  localStorage.setItem('mm_sm1', next.sm1);
-  localStorage.setItem('mm_s2',  next.leg2);
-  if (next.sm1Start  != null) localStorage.setItem('mm_tm1', next.sm1Start);
-  if (next.leg2Start != null) localStorage.setItem('mm_t2',  next.leg2Start);
-}
-
-const STATE_KEYS = ['mm_s1','mm_sm1','mm_tm1','mm_s2','mm_t2'];
-
-function resetCommute() {
-  if (!confirm('Reset today\'s commute? All progress will be cleared.')) return;
-  STATE_KEYS.forEach(k => localStorage.removeItem(k));
-  refresh();
-  showToast('Commute reset');
+  // Saved dests
+  renderSavedDestsJourney();
 }
 
 function setDirection(dir) {
-  if ((localStorage.getItem('mm_direction') || 'out') === dir) return;
-  localStorage.setItem('mm_direction', dir);
-  STATE_KEYS.forEach(k => localStorage.removeItem(k));
-  refresh();
+  appDirection = dir;
+  document.getElementById('mr-morning').classList.toggle('active', dir === 'morning');
+  document.getElementById('mr-return').classList.toggle('active', dir === 'return');
+  initJourneyScreen();
 }
 
-// ── Uber deep links ──────────────────────────────────────────
-function uberLink(pickup, dropoff) {
-  let u = 'uber://?action=setPickup';
-  if (pickup)  u += `&pickup[latitude]=${pickup.lat}&pickup[longitude]=${pickup.lng}${pickup.name ? `&pickup[nickname]=${encodeURIComponent(pickup.name)}` : ''}`;
-  if (dropoff) u += `&dropoff[latitude]=${dropoff.lat}&dropoff[longitude]=${dropoff.lng}${dropoff.name ? `&dropoff[nickname]=${encodeURIComponent(dropoff.name)}` : ''}`;
-  return u;
+function renderSavedDestsJourney() {
+  const saved = ls('mm_savedDests') || [];
+  const sec = document.getElementById('saved-dests-section');
+  if (!saved.length) { sec.innerHTML = ''; return; }
+  sec.innerHTML = `<div class="card"><div class="card-title">Quick Destinations</div><div class="card-sub">Tap to fill destination</div>${
+    saved.map(d => `<button class="btn btn-secondary" style="text-align:left;margin-bottom:8px" onclick="useSavedDest('${encodeURIComponent(d)}')">${d}</button>`).join('')
+  }</div>`;
 }
 
-function bookUber(leg) {
-  const j = getActiveJourney();
-  let url;
-
-  if (leg === 1) {
-    const pickup  = j.startLat ? { lat: j.startLat,  lng: j.startLng,  name: j.startName }       : null;
-    const dropoff = { lat: j.boardMetroLat,  lng: j.boardMetroLng,  name: j.boardMetroName };
-    url = uberLink(pickup, dropoff);
-  } else {
-    const pickup  = { lat: j.alightMetroLat, lng: j.alightMetroLng, name: j.alightMetroName };
-    const dropoff = j.endLat ? { lat: j.endLat, lng: j.endLng, name: j.endName } : null;
-    url = uberLink(pickup, dropoff);
-  }
-
-  setState({ [leg === 1 ? 'leg1' : 'leg2']: 'booked' });
-  refresh();
-  window.location.href = url;
+function useSavedDest(enc) {
+  document.getElementById('journey-dest').value = decodeURIComponent(enc);
 }
 
-// ── Timer helpers ────────────────────────────────────────────
-function secondsUntilDeparture(timeStr) {
-  const [h, m] = timeStr.split(':').map(Number);
-  const dep = new Date(); dep.setHours(h, m, 0, 0);
-  return Math.max(0, (dep - Date.now()) / 1000);
-}
+async function planJourney() {
+  const fromAddr = appDirection === 'morning' ? ls('mm_homeAddress') : (document.getElementById('journey-dest').value.trim());
+  const toAddr   = appDirection === 'morning' ? document.getElementById('journey-dest').value.trim() : ls('mm_homeAddress');
 
-function legSecondsLeft(startTs, travelMin, bufferMin) {
-  if (!startTs) return null;
-  return Math.max(0, (travelMin - bufferMin) * 60 - (Date.now() - startTs) / 1000);
-}
+  if (!toAddr || !fromAddr) { showToast('Please enter a destination'); return; }
 
-function legArrivalTime(startTs, travelMin) {
-  return startTs ? new Date(startTs + travelMin * 60 * 1000) : null;
-}
+  ls('mm_lastDest', document.getElementById('journey-dest').value.trim());
+  ls('mm_buffer', document.getElementById('journey-buffer').value);
 
-function fmt(secs) {
-  if (secs == null) return '--:--';
-  const h = Math.floor(secs / 3600);
-  const m = Math.floor((secs % 3600) / 60);
-  const s = Math.floor(secs % 60);
-  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  return `${m}:${String(s).padStart(2,'0')}`;
-}
+  const content = document.getElementById('preview-content');
+  content.innerHTML = `<div class="loading-wrap"><div class="spinner"></div><span>Finding your route...</span></div>`;
+  showScreen('screen-preview');
 
-function fmtClock(d) {
-  if (!d) return '--:--';
-  const h = d.getHours(), m = d.getMinutes(), p = h >= 12 ? 'PM' : 'AM';
-  return `${h%12||12}:${String(m).padStart(2,'0')} ${p}`;
-}
+  try {
+    let fromCoords = ls(`mm_geocode_${fromAddr}`);
+    let toCoords   = ls(`mm_geocode_${toAddr}`);
+    if (!fromCoords) { fromCoords = await geocode(fromAddr); ls(`mm_geocode_${fromAddr}`, fromCoords); }
+    if (!toCoords)   { toCoords   = await geocode(toAddr);   ls(`mm_geocode_${toAddr}`, toCoords); }
 
-function fmtTime(timeStr) {
-  const [h, m] = timeStr.split(':').map(Number);
-  const p = h >= 12 ? 'PM' : 'AM';
-  return `${h%12||12}:${String(m).padStart(2,'0')} ${p}`;
-}
-
-function fmtMin(min) {
-  if (!min && min !== 0) return '–';
-  return min >= 1 ? `~${Math.round(min)} min` : `~${Math.round(min*60)} sec`;
-}
-
-// ── UI refresh ───────────────────────────────────────────────
-function refresh() {
-  const s   = getSettings();
-  const st  = getState();
-  const j   = getActiveJourney();
-  const dir = localStorage.getItem('mm_direction') || 'out';
-
-  document.getElementById('journeyDate').textContent =
-    new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-
-  // Direction toggle
-  document.getElementById('dirOutBtn').classList.toggle('active', dir === 'out');
-  document.getElementById('dirRetBtn').classList.toggle('active', dir === 'ret');
-
-  // Route card
-  const totalMin = j.seg1Min + j.seg2Min;
-  document.getElementById('rcStart').textContent       = j.startName;
-  document.getElementById('rcBoardMetro').textContent  = j.boardMetroName;
-  document.getElementById('rcTransitTime').textContent = fmtMin(totalMin);
-  document.getElementById('rcAlightMetro').textContent = j.alightMetroName;
-  document.getElementById('rcEnd').textContent         = j.endName;
-  document.getElementById('rcBoardDrive').textContent  = j.boardDriveMin  ? `~${j.boardDriveMin} min drive`  : 'auto';
-  document.getElementById('rcAlightDrive').textContent = j.alightDriveMin ? `~${j.alightDriveMin} min drive` : 'auto';
-  setBadge('rcBoardBadge',   j.boardMetroSrc,  true);
-  setBadge('rcAlightBadge',  j.alightMetroSrc, true);
-  setBadge('rcTransitBadge', j.transitSrc,     true);
-
-  const hasXfer = j.transfers > 0 && !j.sameStation;
-  document.getElementById('rcTransferRow').style.display = hasXfer ? '' : 'none';
-  if (hasXfer) document.getElementById('rcTransferStation').textContent = j.transferStation || '–';
-
-  // When same station: hide metro leg entirely, show warning in route card
-  document.getElementById('metroConnector').style.display = j.sameStation ? 'none' : '';
-  document.getElementById('leg2aGroup').style.display     = hasXfer       ? ''     : 'none';
-  const rcWarn = document.getElementById('rcSameStationWarn');
-  if (rcWarn) rcWarn.style.display = j.sameStation ? '' : 'none';
-
-  // First metro connector: shows first segment time
-  if (!j.sameStation) {
-    const seg1Label = hasXfer
-      ? `Rapid Metro · ${fmtMin(j.seg1Min)}`
-      : `Yellow Line · ${fmtMin(j.seg1Min)}`;
-    document.getElementById('connLabel').textContent = seg1Label;
-  }
-  if (hasXfer) {
-    document.getElementById('leg2aRoute').textContent      = `${j.boardMetroName} → ${j.transferStation}`;
-    document.getElementById('leg2aMode').textContent       = 'Rapid Metro · tap Start when you board';
-    document.getElementById('leg2aBoardLabel').textContent = j.boardMetroName;
-    document.getElementById('leg2aXferLabel').textContent  = j.transferStation || '–';
-    document.getElementById('connXferStation').textContent = j.transferStation || '–';
-  }
-
-  // Leg 1 static labels
-  const startShort = j.startName.split(',')[0];
-  document.getElementById('leg1Route').textContent     = `${startShort} → ${j.boardMetroName}`;
-  document.getElementById('leg1DeptLabel').textContent = fmtTime(j.deptTime);
-  document.getElementById('leg1DeptTag').textContent   = `At: ${fmtTime(j.deptTime)}`;
-  document.getElementById('leg1DropTag').textContent   = j.boardMetroName;
-
-  // Leg 2 static labels
-  const leg2From = hasXfer ? (j.transferStation || 'Transfer') : j.boardMetroName;
-  document.getElementById('leg2Route').textContent       = `${leg2From} → ${j.alightMetroName}`;
-  document.getElementById('leg2BoardLabel').textContent  = leg2From;
-  document.getElementById('leg2AlightLabel').textContent = j.alightMetroName;
-  document.getElementById('leg2BufferTag').textContent   = `Buffer: ${s.bufferTime} min`;
-  document.getElementById('leg2Mode').textContent        = `🛺 Auto at ${j.alightMetroName} · Press Start when you board`;
-
-  refreshLeg1(j, st);
-  refreshLeg2a(j, st);
-  refreshLeg2(j, s, st);
-}
-
-function setBadge(id, src, showText) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.className = `rc-badge ${src || 'est'}`;
-  if (showText) el.textContent = src === 'api' ? 'API ✓' : 'est.';
-}
-
-function setCard(id, stateClass) {
-  document.getElementById(id).className = 'leg-card' + (stateClass ? ` state-${stateClass}` : '');
-}
-
-function setLegBadge(id, text) {
-  document.getElementById(id).textContent = text;
-}
-
-function refreshLeg1(j, st) {
-  const secsLeft = secondsUntilDeparture(j.deptTime);
-  const btn      = document.getElementById('leg1Btn');
-  const timerEl  = document.getElementById('leg1Timer');
-  const labelEl  = document.getElementById('leg1TimerLabel');
-
-  if (st.leg1 === 'booked') {
-    setCard('leg1Card', 'booked'); setLegBadge('leg1Badge', '✓ Booked');
-    document.getElementById('leg1Icon').textContent = '✅';
-    timerEl.textContent = 'Booked'; timerEl.className = 'timer-value done';
-    labelEl.textContent = 'Status';
-    btn.textContent = '✓ Auto Booked'; btn.className = 'btn btn-done';
-    return;
-  }
-
-  if (secsLeft === 0) {
-    setCard('leg1Card', 'ready'); setLegBadge('leg1Badge', 'Book Now!');
-    document.getElementById('leg1Icon').textContent = '🚨';
-    timerEl.textContent = 'NOW'; timerEl.className = 'timer-value urgent';
-    labelEl.textContent = 'Time to book!';
-    btn.innerHTML = `🚗 Book Auto to ${j.boardMetroName}`;
-    btn.className = 'btn btn-uber btn-urgent';
-  } else {
-    const close = secsLeft < 600;
-    setCard('leg1Card', close ? 'active' : ''); setLegBadge('leg1Badge', 'Leg 1');
-    document.getElementById('leg1Icon').textContent = close ? '🛺' : '🏠';
-    timerEl.textContent = fmt(secsLeft);
-    timerEl.className = close ? 'timer-value urgent' : 'timer-value';
-    labelEl.textContent = 'Departs in';
-    btn.innerHTML = `🚗 Book Auto to ${j.boardMetroName}`;
-    btn.className = close ? 'btn btn-uber' : 'btn btn-start';
-  }
-}
-
-// Handles the first Rapid Metro segment when there's a transfer.
-// sm1: waiting → active (boarded) → arrived (timer 0, no auto — just cross platform)
-function refreshLeg2a(j, st) {
-  if (!j.transfers) return;
-  const startBtn = document.getElementById('leg2aStartBtn');
-  const xferBtn  = document.getElementById('leg2aXferBtn');
-  const timerBox = document.getElementById('leg2aTimerBlock');
-  const timerEl  = document.getElementById('leg2aTimer');
-  const badge    = document.getElementById('leg2aBadge');
-
-  if (st.sm1 === 'arrived') {
-    setCard('leg2aCard', 'booked'); badge.textContent = '✓ Arrived';
-    document.getElementById('leg2aIcon').textContent = '🔄';
-    timerBox.style.display = 'flex';
-    timerEl.textContent = 'Transfer'; timerEl.className = 'timer-value done';
-    startBtn.style.display = 'none'; xferBtn.style.display = '';
-    return;
-  }
-
-  if (st.sm1 === 'active') {
-    const secsLeft = legSecondsLeft(st.sm1Start, j.seg1Min, 0);
-    if (secsLeft === 0) {
-      setState({ sm1: 'arrived' });
-      setCard('leg2aCard', 'ready'); badge.textContent = 'Transfer!';
-      document.getElementById('leg2aIcon').textContent = '🔄';
-      timerBox.style.display = 'flex';
-      timerEl.textContent = 'NOW'; timerEl.className = 'timer-value urgent';
-      startBtn.style.display = 'none'; xferBtn.style.display = '';
+    const route = planRoute(fromCoords, toCoords);
+    if (!route) {
+      content.innerHTML = `<div class="no-route"><div class="no-route-icon">🚫</div><div class="no-route-title">No Route Found</div><div class="no-route-sub">Could not find a metro route between these locations. Try adjusting addresses.</div><button class="btn btn-secondary mt-16" onclick="showScreen('screen-journey')">Go Back</button></div>`;
       return;
     }
-    setCard('leg2aCard', 'active'); badge.textContent = 'In Progress';
-    document.getElementById('leg2aIcon').textContent = '🚇';
-    timerBox.style.display = 'flex';
-    timerEl.textContent = fmt(secsLeft); timerEl.className = secsLeft < 60 ? 'timer-value urgent' : 'timer-value';
-    startBtn.style.display = 'none'; xferBtn.style.display = 'none';
-    return;
-  }
 
-  // waiting
-  setCard('leg2aCard', ''); badge.textContent = 'Leg 2';
-  document.getElementById('leg2aIcon').textContent = '🚇';
-  timerBox.style.display = 'none'; startBtn.style.display = ''; xferBtn.style.display = 'none';
+    currentRoute = {
+      route,
+      fromAddr, toAddr, fromCoords, toCoords,
+      depTime: document.getElementById('journey-time').value,
+      buffer: parseInt(document.getElementById('journey-buffer').value)
+    };
+
+    renderPreview(currentRoute);
+  } catch(e) {
+    content.innerHTML = `<div class="no-route"><div class="no-route-icon">⚠️</div><div class="no-route-title">Error</div><div class="no-route-sub">${e.message}</div><button class="btn btn-secondary mt-16" onclick="showScreen('screen-journey')">Go Back</button></div>`;
+  }
 }
 
-function refreshLeg2(j, s, st) {
-  const startBtn = document.getElementById('leg2StartBtn');
-  const uberBtn  = document.getElementById('leg2UberBtn');
-  const timerBox = document.getElementById('leg2TimerBlock');
-  const timerEl  = document.getElementById('leg2Timer');
-  const labelEl  = document.getElementById('leg2TimerLabel');
-  const travelMin = j.transfers > 0 ? j.seg2Min : j.seg1Min;
-  const legNum    = j.transfers > 0 ? 'Leg 3' : 'Leg 2';
+// ============================================================
+// PREVIEW SCREEN
+// ============================================================
+function renderPreview(cr) {
+  const {route, fromAddr, toAddr, depTime, buffer} = cr;
+  const {legs, totalMin} = route;
+  const changes = legs.filter(l => l.type === 'interchange').length;
 
-  // Same station: no metro needed — show direct auto button once leg 1 is done
-  if (j.sameStation) {
-    if (st.leg2 === 'booked') {
-      setCard('leg2Card', 'booked'); setLegBadge('leg2Badge', '✓ Booked');
-      document.getElementById('leg2Icon').textContent = '✅';
-      timerBox.style.display = 'none'; startBtn.style.display = 'none'; uberBtn.style.display = 'none';
-      return;
+  let html = `<div class="route-summary">
+    <div class="route-summary-item"><div class="route-summary-val gold">${Math.round(totalMin)}</div><div class="route-summary-key">Total min</div></div>
+    <div class="route-summary-item"><div class="route-summary-val">${changes}</div><div class="route-summary-key">Changes</div></div>
+    <div class="route-summary-item"><div class="route-summary-val">${legs.filter(l=>l.type==='metro').length}</div><div class="route-summary-key">Lines</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Route Details</div>
+    <div class="card-sub">${fromAddr} → ${toAddr} · Depart ${depTime}</div>`;
+
+  for (const leg of legs) {
+    if (leg.type === 'auto') {
+      html += `<div class="route-leg">
+        <div class="leg-icon" style="background:#FFD700;color:#000">🚗</div>
+        <div class="leg-info">
+          <div class="leg-title">${leg.fromName} → ${leg.toName}</div>
+          <div class="leg-detail">Auto/Uber · ~${(leg.distKm*1000).toFixed(0)}m</div>
+          <div class="leg-dur">~${Math.ceil(leg.distKm*4)} min</div>
+        </div>
+      </div>`;
+    } else if (leg.type === 'metro') {
+      const line = LINES[leg.line];
+      const stNames = leg.stations.map(s => getStationName(s));
+      html += `<div class="route-leg">
+        <div class="leg-icon" style="background:${line.color};color:${line.textColor}">🚇</div>
+        <div class="leg-info">
+          <div class="leg-title">${getStationName(leg.fromStation)} → ${getStationName(leg.toStation)}</div>
+          <div class="leg-detail">
+            <span class="line-badge" style="background:${line.color};color:${line.textColor}">${line.name}</span>
+            · ${leg.stops} stops
+          </div>
+          <div class="leg-stops">${stNames.map(n => `<span class="leg-stop-chip">${n}</span>`).join('')}</div>
+          <div class="leg-dur">${Math.round(leg.durationMin)} min</div>
+        </div>
+      </div>`;
+    } else if (leg.type === 'interchange') {
+      const fromLine = LINES[leg.fromLine];
+      const toLine   = LINES[leg.toLine];
+      html += `<div class="route-leg">
+        <div class="leg-icon" style="background:var(--surface2);color:var(--muted)">🔄</div>
+        <div class="leg-info">
+          <div class="leg-title">Change at ${getStationName(leg.at)}</div>
+          <div class="leg-detail">
+            <span class="line-badge" style="background:${fromLine.color};color:${fromLine.textColor}">${fromLine.name}</span>
+            → <span class="line-badge" style="background:${toLine.color};color:${toLine.textColor}">${toLine.name}</span>
+          </div>
+          <div class="leg-dur">${leg.durationMin} min walk</div>
+        </div>
+      </div>`;
     }
-    const ready = st.leg1 === 'booked';
-    setCard('leg2Card', ready ? 'active' : '');
-    setLegBadge('leg2Badge', ready ? 'Book Now!' : legNum);
-    document.getElementById('leg2Icon').textContent = ready ? '🛺' : '🏠';
-    timerBox.style.display = 'none'; startBtn.style.display = 'none';
-    uberBtn.style.display = ready ? '' : 'none';
-    return;
   }
 
-  if (st.leg2 === 'booked') {
-    setCard('leg2Card', 'booked'); setLegBadge('leg2Badge', '✓ Booked');
-    document.getElementById('leg2Icon').textContent = '✅';
-    timerBox.style.display = 'flex';
-    timerEl.textContent = 'Booked'; timerEl.className = 'timer-value done';
-    labelEl.textContent = 'Status';
-    startBtn.style.display = 'none'; uberBtn.style.display = 'none';
-    return;
+  html += `</div>
+  <button class="btn btn-primary" onclick="startCommute()">Start Commute</button>
+  <button class="btn btn-secondary" onclick="showScreen('screen-journey')">Plan Again</button>`;
+
+  document.getElementById('preview-content').innerHTML = html;
+}
+
+// ============================================================
+// COMMUTE SCREEN
+// ============================================================
+let commuteInterval = null;
+
+function startCommute() {
+  if (!currentRoute) return;
+  const {route, buffer} = currentRoute;
+  commuteState = {
+    legs: route.legs,
+    legIndex: 0,
+    legPhase: 'waiting', // waiting | active | done
+    buffer,
+    boardedTimes: {},    // legIndex -> Date
+    startTime: new Date(),
+    done: false
+  };
+  ls('mm_commuteState', commuteState);
+  renderCommuteScreen();
+  showScreen('screen-commute');
+  if (commuteInterval) clearInterval(commuteInterval);
+  commuteInterval = setInterval(tickCommute, 1000);
+}
+
+function endCommute() {
+  if (commuteInterval) clearInterval(commuteInterval);
+  commuteState = null;
+  showScreen('screen-journey');
+  showToast('Commute ended.');
+}
+
+function tickCommute() {
+  if (!commuteState) return;
+  renderCommuteScreen();
+}
+
+function boardLeg(legIndex) {
+  if (!commuteState) return;
+  commuteState.boardedTimes[legIndex] = new Date().toISOString();
+  showToast('Boarded! Countdown started.');
+  renderCommuteScreen();
+}
+
+function renderCommuteScreen() {
+  if (!commuteState) return;
+  const {legs, boardedTimes, buffer} = commuteState;
+  const now = new Date();
+
+  // Determine active leg
+  let activeLegIdx = -1;
+  for (let i = 0; i < legs.length; i++) {
+    if (legs[i].type === 'metro') {
+      if (!boardedTimes[i]) { activeLegIdx = i; break; }
+    }
+  }
+  const allBoarded = legs.filter(l => l.type === 'metro').every((l, idx) => {
+    const actualIdx = legs.indexOf(l);
+    return boardedTimes[actualIdx];
+  });
+
+  // Build commute HTML
+  let html = '';
+
+  // Find last metro leg for Uber timing
+  const lastMetroIdx = [...legs.keys()].filter(i => legs[i].type === 'metro').pop();
+  const lastMetroLeg = lastMetroIdx !== undefined ? legs[lastMetroIdx] : null;
+  const lastMetroBoarded = lastMetroIdx !== undefined ? boardedTimes[lastMetroIdx] : null;
+
+  // Countdown for active leg
+  let countdownSecs = null;
+  let countdownTotal = null;
+  let countdownLabel = '';
+  let ringColor = '#FFD700';
+
+  if (lastMetroBoarded && lastMetroLeg) {
+    const boardedAt = new Date(lastMetroBoarded);
+    const totalSecs = lastMetroLeg.durationMin * 60;
+    const elapsed   = (now - boardedAt) / 1000;
+    const remaining = Math.max(0, totalSecs - elapsed);
+    countdownSecs  = remaining;
+    countdownTotal = totalSecs;
+    countdownLabel = 'Until arrival';
+    ringColor = LINES[lastMetroLeg.line]?.color || '#FFD700';
+
+    // Trigger Uber booking countdown
+    const uberAt = Math.max(0, totalSecs - buffer * 60);
+    if (elapsed >= uberAt && elapsed < totalSecs) {
+      ringColor = '#FFD700';
+    }
+  } else if (activeLegIdx >= 0 && boardedTimes[activeLegIdx]) {
+    const leg = legs[activeLegIdx];
+    const boardedAt = new Date(boardedTimes[activeLegIdx]);
+    const totalSecs = leg.durationMin * 60;
+    const elapsed   = (now - boardedAt) / 1000;
+    countdownSecs  = Math.max(0, totalSecs - elapsed);
+    countdownTotal = totalSecs;
+    countdownLabel = 'Until next stop';
+    ringColor = LINES[leg.line]?.color || '#FFD700';
   }
 
-  const timerSecs = st.leg2 === 'active'
-    ? legSecondsLeft(st.leg2Start, travelMin, s.bufferTime) : null;
-
-  if (st.leg2 === 'ready' || timerSecs === 0) {
-    setState({ leg2: 'ready' });
-    setCard('leg2Card', 'ready'); setLegBadge('leg2Badge', 'Book Now!');
-    document.getElementById('leg2Icon').textContent = '🚨';
-    timerBox.style.display = 'flex';
-    timerEl.textContent = 'NOW'; timerEl.className = 'timer-value urgent';
-    labelEl.textContent = `Book auto at ${j.alightMetroName}!`;
-    startBtn.style.display = 'none'; uberBtn.style.display = '';
-    return;
+  // Ring
+  if (countdownSecs !== null) {
+    const R = 90;
+    const C = 2 * Math.PI * R;
+    const pct = countdownTotal > 0 ? countdownSecs / countdownTotal : 0;
+    const offset = C * (1 - pct);
+    const mins = Math.floor(countdownSecs / 60);
+    const secs = Math.floor(countdownSecs % 60);
+    html += `<div class="countdown-wrap">
+      <div class="countdown-ring">
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          <circle class="bg" cx="100" cy="100" r="${R}"/>
+          <circle class="fg" cx="100" cy="100" r="${R}"
+            stroke="${ringColor}"
+            stroke-dasharray="${C}"
+            stroke-dashoffset="${offset}"/>
+        </svg>
+        <div class="countdown-inner">
+          <div class="countdown-time" style="color:${ringColor}">${mins}:${String(secs).padStart(2,'0')}</div>
+          <div class="countdown-label">${countdownLabel}</div>
+        </div>
+      </div>
+    </div>`;
   }
 
-  if (st.leg2 === 'active') {
-    const arrival = legArrivalTime(st.leg2Start, travelMin);
-    setCard('leg2Card', 'active'); setLegBadge('leg2Badge', 'In Progress');
-    document.getElementById('leg2Icon').textContent = '🚇';
-    timerBox.style.display = 'flex';
-    timerEl.textContent = fmt(timerSecs);
-    timerEl.className   = timerSecs < 60 ? 'timer-value urgent' : 'timer-value';
-    labelEl.textContent = 'Book auto in';
-    document.getElementById('leg2ArrivalTag').textContent = `Auto at: ~${fmtClock(arrival)}`;
-    startBtn.style.display = 'none'; uberBtn.style.display = 'none';
-    return;
+  // Active status card
+  const firstAuto = legs[0];
+  const lastAuto  = legs[legs.length - 1];
+  html += `<div class="active-card" style="padding-left:22px">
+    <div class="active-card-line" style="background:var(--yellow-line)"></div>
+    <div class="active-card-label">Journey</div>
+    <div class="active-card-title">${firstAuto.fromName} → ${lastAuto.toName}</div>
+    <div class="active-card-sub">${allBoarded ? 'All legs boarded' : `${Object.keys(boardedTimes).length} of ${legs.filter(l=>l.type==='metro').length} boarded`}</div>
+  </div>`;
+
+  // Uber button — first auto leg
+  const uber1Coords = firstAuto.toCoords;
+  const uber1Pickup = firstAuto.fromCoords;
+  html += buildUberButton('Book Uber to ' + firstAuto.toName, uber1Pickup, uber1Coords, true);
+
+  // Timeline
+  html += `<div class="card"><div class="timeline">`;
+
+  for (let i = 0; i < legs.length; i++) {
+    const leg = legs[i];
+    let dotColor = '#2A2A3A';
+    let lineColor = '#2A2A3A';
+    let title = '', sub = '', extra = '';
+
+    if (leg.type === 'auto') {
+      dotColor = '#FFD700'; lineColor = '#FFD700';
+      title = `${leg.fromName} → ${leg.toName}`;
+      sub   = `Auto/Uber · ~${(leg.distKm*1000).toFixed(0)}m`;
+    } else if (leg.type === 'metro') {
+      const line = LINES[leg.line];
+      dotColor = line.color; lineColor = line.color;
+      title = `${getStationName(leg.fromStation)} → ${getStationName(leg.toStation)}`;
+      sub   = `${line.name} · ${leg.stops} stops · ${Math.round(leg.durationMin)} min`;
+
+      const boarded = boardedTimes[i];
+      if (boarded) {
+        extra = `<div style="margin-top:6px"><span style="color:#00A651;font-weight:600;font-size:13px">✓ Boarded</span></div>`;
+      } else if (i === activeLegIdx) {
+        extra = `<button class="board-btn" style="border-color:${line.color}" onclick="boardLeg(${i})">Boarded at ${getStationName(leg.fromStation)} 📍</button>`;
+      } else {
+        extra = `<button class="board-btn" style="border-color:#2A2A3A;opacity:0.5" disabled>Board at ${getStationName(leg.fromStation)}</button>`;
+      }
+    } else if (leg.type === 'interchange') {
+      dotColor = '#7070A0'; lineColor = '#2A2A3A';
+      title = `Change at ${getStationName(leg.at)}`;
+      sub   = `${leg.durationMin} min walk · Platform change`;
+    }
+
+    const isActive = i === activeLegIdx;
+    html += `<div class="timeline-item">
+      <div class="timeline-dot ${isActive ? 'active-dot' : ''}" style="background:${dotColor}"></div>
+      <div class="timeline-line" style="background:${lineColor}"></div>
+      <div class="tl-title">${title}</div>
+      <div class="tl-sub">${sub}</div>
+      ${extra}
+    </div>`;
   }
 
-  // waiting
-  setCard('leg2Card', ''); setLegBadge('leg2Badge', legNum);
-  document.getElementById('leg2Icon').textContent = '🚇';
-  timerBox.style.display = 'none'; uberBtn.style.display = 'none';
-  // When transfer: start button is hidden — leg2 is started by the "Board Yellow Line" button in leg2a
-  startBtn.style.display = j.transfers > 0 ? 'none' : '';
+  html += `</div></div>`;
+
+  // Uber button — last auto leg (timed)
+  if (lastMetroBoarded && lastMetroLeg) {
+    const boardedAt  = new Date(lastMetroBoarded);
+    const totalSecs  = lastMetroLeg.durationMin * 60;
+    const elapsed    = (now - boardedAt) / 1000;
+    const uberAt     = Math.max(0, totalSecs - buffer * 60);
+    const uberActive = elapsed >= uberAt;
+    const lastAutoLeg = lastAuto;
+    html += `<div style="margin-top:16px">
+      <div class="text-small text-muted" style="margin-bottom:8px;text-align:center">
+        ${uberActive ? '📍 Book Uber now for arrival' : `⏱ Uber booking in ${Math.ceil((uberAt - elapsed)/60)} min`}
+      </div>
+      ${buildUberButton('Book Uber from ' + getStationName(lastMetroLeg.toStation), STATIONS[resolveStation(lastMetroLeg.toStation)]?.coords, lastAutoLeg.toCoords, uberActive)}
+    </div>`;
+  }
+
+  // TODO [Ola]: Add Ola deep link: olacabs://...
+  // TODO [Rapido]: Add Rapido deep link: rapido://book?...
+
+  html += `<div style="height:30px"></div>`;
+  document.getElementById('commute-content').innerHTML = html;
 }
 
-// ── Actions ──────────────────────────────────────────────────
-function startFirstMetro() {
-  setState({ sm1: 'active', sm1Start: Date.now() });
-  refresh();
+function buildUberButton(label, pickupCoords, dropCoords, active) {
+  if (!pickupCoords || !dropCoords) return '';
+  const link = `uber://?action=setPickup&pickup[latitude]=${pickupCoords[0]}&pickup[longitude]=${pickupCoords[1]}&dropoff[latitude]=${dropCoords[0]}&dropoff[longitude]=${dropCoords[1]}`;
+  // TODO [GPS]: Replace manual "Boarded" button with background location tracking underground
+  return `<a href="${link}" style="text-decoration:none">
+    <button class="uber-btn ${active ? 'active' : ''}" ${active ? '' : 'disabled'}>
+      <span style="font-size:20px">🚗</span> ${label}
+    </button>
+  </a>`;
 }
 
-function startLeg2() {
-  setState({ leg2: 'active', leg2Start: Date.now() });
-  refresh();
+// ============================================================
+// SETTINGS SCREEN
+// ============================================================
+function initSettings() {
+  document.getElementById('settings-home').value = ls('mm_homeAddress') || '';
+  document.getElementById('settings-api').value  = ls('mm_mapsApiKey') || '';
+  const buf = ls('mm_buffer') || '7';
+  document.getElementById('settings-buffer').value = buf;
+  renderSettingsSaved();
 }
 
-// ── Loading overlay ──────────────────────────────────────────
-function showLoading() {
-  document.getElementById('loadingOverlay').classList.add('visible');
-  setLoadingStep('Resolving route…', 'Contacting Google Maps APIs');
-}
-function hideLoading() {
-  document.getElementById('loadingOverlay').classList.remove('visible');
-}
-function setLoadingStep(step, sub) {
-  document.getElementById('loadingStep').textContent = step;
-  document.getElementById('loadingSub').textContent  = sub;
+function saveSettingsHome() {
+  const v = document.getElementById('settings-home').value.trim();
+  if (!v) { showToast('Enter an address'); return; }
+  ls('mm_homeAddress', v);
+  showToast('Home address saved');
 }
 
-// ── Navigation ───────────────────────────────────────────────
-let activeScreen = 'commute';
-
-function showScreen(which) {
-  document.getElementById('setupScreen').classList.toggle('active',   which === 'setup');
-  document.getElementById('commuteScreen').classList.toggle('active', which === 'commute');
-  document.getElementById('navBtn').textContent = which === 'commute' ? 'Setup' : 'Commute';
-  activeScreen = which;
-  if (which === 'setup')   populateForm();
-  if (which === 'commute') refresh();
+function saveSettingsApi() {
+  const v = document.getElementById('settings-api').value.trim();
+  ls('mm_mapsApiKey', v);
+  showToast('API key saved');
 }
 
-function toggleScreen() {
-  showScreen(activeScreen === 'commute' ? 'setup' : 'commute');
+function saveSettingsBuffer() {
+  ls('mm_buffer', document.getElementById('settings-buffer').value);
+  showToast('Buffer saved');
 }
 
-// ── Toast ────────────────────────────────────────────────────
-let _toastTimer;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+function renderSettingsSaved() {
+  const saved = ls('mm_savedDests') || [];
+  const el = document.getElementById('settings-saved-list');
+  if (!saved.length) { el.innerHTML = '<div class="text-small text-muted" style="margin-bottom:12px">No saved destinations</div>'; return; }
+  el.innerHTML = saved.map((d, i) => `<div class="saved-dest">
+    <div><div class="saved-dest-name">${d}</div></div>
+    <button class="saved-dest-del" onclick="deleteSavedDest(${i})">✕</button>
+  </div>`).join('');
 }
 
-// ── Init ─────────────────────────────────────────────────────
+function addSavedDest() {
+  const v = document.getElementById('settings-new-dest').value.trim();
+  if (!v) { showToast('Enter a destination'); return; }
+  let saved = ls('mm_savedDests') || [];
+  if (saved.length >= 3) { showToast('Max 3 saved destinations'); return; }
+  if (saved.includes(v)) { showToast('Already saved'); return; }
+  saved.push(v);
+  ls('mm_savedDests', saved);
+  document.getElementById('settings-new-dest').value = '';
+  renderSettingsSaved();
+  showToast('Saved!');
+}
+
+function deleteSavedDest(i) {
+  let saved = ls('mm_savedDests') || [];
+  saved.splice(i, 1);
+  ls('mm_savedDests', saved);
+  renderSettingsSaved();
+}
+
+function resetApp() {
+  if (!confirm('Reset all MetroMate data?')) return;
+  Object.keys(localStorage).filter(k => k.startsWith('mm_')).forEach(k => localStorage.removeItem(k));
+  location.reload();
+}
+
+// ============================================================
+// INIT
+// ============================================================
 function init() {
-  if (!localStorage.getItem('mm_departureTime')) showScreen('setup');
-  else showScreen('commute');
-  setInterval(refresh, 1000);
+  const home = ls('mm_homeAddress');
+  if (home) {
+    initJourneyScreen();
+    showScreen('screen-journey');
+  } else {
+    showScreen('screen-home');
+  }
+
+  // Settings screen init on navigate
+  document.getElementById('screen-settings').addEventListener('transitionend', initSettings);
+  // Also init when shown
+  const origShowScreen = window.showScreen;
+  window.showScreen = function(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (id === 'screen-settings') initSettings();
+    if (id === 'screen-journey') initJourneyScreen();
+  };
 }
 
 init();

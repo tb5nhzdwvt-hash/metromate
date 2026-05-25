@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0A0A0F">
+  <title>MetroMate</title>
+  <style>
+    :root {
+      --yellow:        #FFD700;
+      --yellow-glow:   rgba(255,215,0,0.15);
+      --yellow-border: rgba(255,215,0,0.35);
+      --bg:            #0A0A0F;
+      --surface:       #14141E;
+      --surface2:      #1E1E2E;
+      --border:        #2A2A3E;
+      --text:          #F0F0F8;
+      --muted:         #7070A0;
+      --green:         #00C896;
+      --green-glow:    rgba(0,200,150,0.15);
+      --red:           #FF4D4D;
+      --red-glow:      rgba(255,77,77,0.15);
+      --radius:        14px;
+      --radius-sm:     8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: var(--bg); -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100dvh; max-width: 480px; margin: 0 auto;
+      -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
+    }
+
+    .header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 14px 20px 14px 16px; display: flex; align-items: center;
+      justify-content: space-between; position: sticky; top: 0; z-index: 200;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .header-brand { display: flex; align-items: center; gap: 10px; }
+    .header-logo {
+      width: 36px; height: 36px; background: var(--yellow);
+      border-radius: var(--radius-sm); display: grid; place-items: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .header-name { font-size: 21px; font-weight: 800; color: var(--yellow); letter-spacing: -0.6px; line-height: 1; }
+    .header-sub  { font-size: 10px; color: var(--muted); letter-spacing: 1.2px; margin-top: 2px; text-transform: uppercase; }
+    .header-nav  {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+      padding: 8px 16px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+      cursor: pointer; -webkit-appearance: none; letter-spacing: -0.2px;
+    }
+
+    .screen { display: none; padding: 20px 16px 60px; }
+    .screen.active { display: block; }
+
+    .section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--yellow); margin-bottom: 12px;
+    }
+
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+    .field input {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); padding: 15px 16px; border-radius: var(--radius);
+      font-size: 16px; -webkit-appearance: none; appearance: none;
+      font-family: inherit; transition: border-color 0.15s;
+    }
+    .field input:focus { outline: none; border-color: var(--yellow); }
+    .field .hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+    .key-wrap { display: flex; gap: 8px; }
+    .key-wrap input { flex: 1; font-family: monospace; letter-spacing: 0.5px; }
+    .key-eye {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0 14px; font-size: 18px;
+      cursor: pointer; color: var(--muted); flex-shrink: 0;
+    }
+
+    .setup-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px; margin-bottom: 24px;
+    }
+    .setup-section { margin-bottom: 26px; }
+
+    .rt-stop { display: flex; gap: 14px; align-items: flex-start; }
+    .rt-stop + .rt-stop { margin-top: 0; }
+    .rt-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 28px; }
+    .rt-dot {
+      width: 28px; height: 28px; border-radius: 50%; display: grid;
+      place-items: center; font-size: 13px; font-weight: 700; flex-shrink: 0; z-index: 1;
+    }
+    .rt-dot.home  { background: var(--surface2); border: 2px solid var(--muted); font-size: 15px; }
+    .rt-dot.metro { background: var(--yellow); color: #000; font-size: 11px; }
+    .rt-dot.dest  { background: var(--green); color: #000; font-size: 11px; }
+    .rt-line { width: 2px; flex: 1; min-height: 32px; background: var(--border); }
+    .rt-line.yellow { background: var(--yellow); opacity: 0.5; }
+    .rt-right { padding: 4px 0 28px; flex: 1; }
+    .rt-stop:last-child .rt-right { padding-bottom: 0; }
+    .rt-name { font-size: 15px; font-weight: 600; line-height: 1.2; }
+    .rt-sub  { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+
+    .yl-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--yellow-glow); border: 1px solid var(--yellow-border);
+      border-radius: 5px; padding: 2px 8px; font-size: 11px; font-weight: 600;
+      color: var(--yellow); margin-top: 4px;
+    }
+    .yl-dot { width: 7px; height: 7px; background: var(--yellow); border-radius: 50%; flex-shrink: 0; }
+
+    .btn {
+      display: block; width: 100%; padding: 17px 20px; border-radius: var(--radius);
+      border: none; font-size: 16px; font-weight: 700; cursor: pointer;
+      font-family: inherit; letter-spacing: -0.3px; text-align: center;
+      -webkit-appearance: none; transition: opacity 0.12s, transform 0.08s;
+    }
+    .btn:active { opacity: 0.8; transform: scale(0.98); }
+    .btn-save  { background: var(--yellow); color: #000; }
+    .btn-start { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-uber  { background: #000; color: #fff; border: 2px solid var(--yellow); font-size: 17px; padding: 19px 20px; }
+    .btn-done  { background: var(--green-glow); color: var(--green); border: 1px solid var(--green); cursor: default; }
+    .btn-done:active { opacity: 1; transform: none; }
+    .btn-urgent { animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 var(--yellow-glow); }
+      50%       { box-shadow: 0 0 0 8px transparent; }
+    }
+    .btn-disabled { opacity: 0.35; pointer-events: none; }
+
+    .direction-toggle {
+      display: flex; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); overflow: hidden; margin-bottom: 16px;
+    }
+    .dir-btn {
+      flex: 1; padding: 11px 8px; font-size: 13px; font-weight: 600;
+      background: var(--surface2); color: var(--muted); border: none;
+      cursor: pointer; font-family: inherit; transition: background 0.15s, color 0.15s;
+      line-height: 1.3; text-align: center;
+    }
+    .dir-btn + .dir-btn { border-left: 1px solid var(--border); }
+    .dir-btn.active { background: var(--yellow-glow); color: var(--yellow); }
+
+    .journey-header { padding: 18px 4px 16px; }
+    .journey-date   { font-size: 12px; color: var(--muted); letter-spacing: 0.4px; }
+    .journey-title  { font-size: 26px; font-weight: 800; letter-spacing: -0.8px; margin-top: 2px; }
+
+    .route-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px; margin-bottom: 18px;
+    }
+    .rc-row { display: flex; align-items: center; gap: 10px; }
+    .rc-dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+    .rc-dot.home  { background: var(--surface2); border: 2px solid var(--muted); }
+    .rc-dot.metro { background: var(--yellow); }
+    .rc-dot.dest  { background: var(--green); }
+    .rc-name {
+      font-size: 13px; font-weight: 600; flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .rc-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;
+    }
+    .rc-badge.api { background: var(--green-glow); color: var(--green); border: 1px solid rgba(0,200,150,0.3); }
+    .rc-badge.est { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+    .rc-seg {
+      display: flex; align-items: center; padding: 3px 0 3px 26px;
+      font-size: 12px; color: var(--muted); gap: 5px;
+    }
+    .rc-transfer {
+      display: flex; align-items: center; padding: 3px 0 3px 26px;
+      font-size: 12px; color: var(--yellow); gap: 5px;
+    }
+
+    .leg-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 18px 16px;
+      margin-bottom: 8px; position: relative; overflow: hidden;
+    }
+    .leg-card::after {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 4px; background: var(--border); transition: background 0.2s;
+    }
+    .leg-card.state-active::after { background: var(--yellow); }
+    .leg-card.state-ready::after  { background: var(--red); }
+    .leg-card.state-booked::after { background: var(--green); }
+    .leg-card.state-active { border-color: var(--yellow-border); }
+    .leg-card.state-ready  { border-color: rgba(255,77,77,0.35); }
+    .leg-card.state-booked { border-color: rgba(0,200,150,0.35); opacity: 0.72; }
+
+    .leg-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .leg-badge {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+      padding: 3px 9px; border-radius: 5px; background: var(--surface2); color: var(--muted);
+      transition: background 0.2s, color 0.2s;
+    }
+    .leg-card.state-active .leg-badge { background: var(--yellow-glow); color: var(--yellow); }
+    .leg-card.state-ready  .leg-badge { background: var(--red-glow);    color: var(--red); }
+    .leg-card.state-booked .leg-badge { background: var(--green-glow);  color: var(--green); }
+    .leg-icon  { font-size: 22px; }
+    .leg-route { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 2px; }
+    .leg-mode  { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+
+    .timer-block {
+      background: var(--surface2); border-radius: var(--radius-sm);
+      padding: 12px 16px; display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 14px;
+    }
+    .timer-label { font-size: 12px; color: var(--muted); }
+    .timer-value {
+      font-size: 28px; font-weight: 800; letter-spacing: -1px;
+      font-variant-numeric: tabular-nums; color: var(--yellow); transition: color 0.2s;
+    }
+    .timer-value.urgent { color: var(--red); }
+    .timer-value.done   { color: var(--green); font-size: 22px; }
+
+    .connector { display: flex; align-items: center; gap: 10px; padding: 4px 8px; margin-bottom: 8px; }
+    .connector-line { flex: 1; height: 2px; background: var(--border); }
+    .connector-inner { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .connector-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--yellow-glow); border: 1px solid var(--yellow-border);
+      border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 600;
+      color: var(--yellow); white-space: nowrap;
+    }
+    .connector-transfer {
+      font-size: 11px; color: var(--yellow); opacity: 0.8;
+      background: var(--surface2); border: 1px solid var(--yellow-border);
+      border-radius: 4px; padding: 2px 8px; white-space: nowrap;
+    }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .tag {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 5px; padding: 4px 10px; font-size: 12px; color: var(--muted);
+    }
+
+    .footer-actions { text-align: center; margin-top: 20px; }
+    .btn-ghost {
+      background: none; border: none; color: var(--muted); font-size: 14px;
+      cursor: pointer; padding: 10px 20px; font-family: inherit;
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(10,10,15,0.96);
+      display: none; flex-direction: column; align-items: center;
+      justify-content: center; gap: 18px; z-index: 500;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .loading-overlay.visible { display: flex; }
+    .loading-spinner {
+      width: 44px; height: 44px; border: 3px solid var(--border);
+      border-top-color: var(--yellow); border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-step { font-size: 15px; font-weight: 600; color: var(--text); text-align: center; }
+    .loading-sub  { font-size: 12px; color: var(--muted); text-align: center; max-width: 280px; line-height: 1.5; }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(calc(100% + 32px));
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 40px; padding: 12px 22px; font-size: 14px; font-weight: 500;
+      z-index: 999; transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+      white-space: nowrap; color: var(--text); box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <div class="header-logo">🚇</div>
+    <div>
+      <div class="header-name">MetroMate</div>
+      <div class="header-sub">Delhi Commuter</div>
+    </div>
+  </div>
+  <button class="header-nav" id="navBtn" onclick="toggleScreen()">Setup</button>
+</header>
+
+<!-- ── SETUP SCREEN ─────────────────────────────────────────── -->
+<div class="screen" id="setupScreen">
+
+  <div class="section-label" style="margin-top:4px;">Your Route</div>
+
+  <div class="setup-card">
+    <div class="rt-stop">
+      <div class="rt-left"><div class="rt-dot home">🏠</div><div class="rt-line"></div></div>
+      <div class="rt-right">
+        <div class="rt-name" id="rtHomeName">Home</div>
+        <div class="rt-sub">🛺 Auto · Uber pickup at departure time</div>
+      </div>
+    </div>
+    <div class="rt-stop">
+      <div class="rt-left"><div class="rt-dot metro">M</div><div class="rt-line yellow"></div></div>
+      <div class="rt-right">
+        <div class="rt-name">Nearest Metro to Home</div>
+        <div class="rt-sub">Found via Places API · Board Yellow Line</div>
+        <span class="yl-pill"><span class="yl-dot"></span>Travel time + transfers via Directions API</span>
+      </div>
+    </div>
+    <div class="rt-stop">
+      <div class="rt-left"><div class="rt-dot metro">M</div><div class="rt-line"></div></div>
+      <div class="rt-right">
+        <div class="rt-name">Nearest Metro to Destination</div>
+        <div class="rt-sub">🛺 Auto booked here before you arrive</div>
+      </div>
+    </div>
+    <div class="rt-stop">
+      <div class="rt-left"><div class="rt-dot dest">★</div></div>
+      <div class="rt-right" style="padding-bottom:0">
+        <div class="rt-name" id="rtDestName">Destination</div>
+        <div class="rt-sub">🛺 Auto · Uber dropoff</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="setup-section">
+    <div class="section-label">Google Maps API</div>
+    <div class="field">
+      <label>API Key <span style="color:var(--green);font-size:11px">(enables live route data)</span></label>
+      <div class="key-wrap">
+        <input type="password" id="mapsApiKey" placeholder="AIza…" autocomplete="off" spellcheck="false">
+        <button class="key-eye" onclick="toggleKeyVisibility()" type="button">👁</button>
+      </div>
+      <div class="hint">Enable: Geocoding · Places (New) · Directions · Maps JavaScript API</div>
+    </div>
+  </div>
+
+  <div class="setup-section">
+    <div class="section-label">Your Journey</div>
+    <div class="field">
+      <label>Home / start address</label>
+      <input type="text" id="homeAddress" placeholder="e.g. Hamilton Court, Sector 29, Gurgaon"
+             oninput="previewAddress('home', this.value)">
+      <div class="hint">Used as Uber pickup + to find your nearest metro station</div>
+    </div>
+    <div class="field">
+      <label>Destination address</label>
+      <input type="text" id="destAddress" placeholder="e.g. Connaught Place, New Delhi"
+             oninput="previewAddress('dest', this.value)">
+      <div class="hint">Used as Uber dropoff + to find the nearest metro station</div>
+    </div>
+  </div>
+
+  <div class="setup-section">
+    <div class="section-label">Timing</div>
+    <div class="field">
+      <label>Morning departure (Home → Destination)</label>
+      <input type="time" id="departureTime" value="08:20">
+    </div>
+    <div class="field">
+      <label>Evening return departure (Destination → Home)</label>
+      <input type="time" id="returnTime" value="18:00">
+    </div>
+    <div class="field">
+      <label>Uber booking buffer (minutes before metro arrival)</label>
+      <input type="number" id="bufferTime" value="5" min="1" max="15">
+      <div class="hint">Auto is booked this many minutes before you reach the station.</div>
+    </div>
+  </div>
+
+  <button class="btn btn-save" onclick="handleSave()">Save & Resolve Route →</button>
+</div>
+
+<!-- ── COMMUTE SCREEN ───────────────────────────────────────── -->
+<div class="screen" id="commuteScreen">
+
+  <div class="journey-header">
+    <div class="journey-date" id="journeyDate"></div>
+    <div class="journey-title">Today's Commute</div>
+  </div>
+
+  <div class="direction-toggle">
+    <button class="dir-btn active" id="dirOutBtn" onclick="setDirection('out')">🌅 Morning</button>
+    <button class="dir-btn"        id="dirRetBtn" onclick="setDirection('ret')">🌆 Return</button>
+  </div>
+
+  <div class="route-card">
+    <div class="rc-row">
+      <span class="rc-dot home"></span>
+      <span class="rc-name" id="rcStart">Home</span>
+    </div>
+    <div class="rc-seg">🛺 Auto · <span id="rcBoardDrive">–</span></div>
+    <div class="rc-row">
+      <span class="rc-dot metro"></span>
+      <span class="rc-name" id="rcBoardMetro">Origin Metro</span>
+      <span class="rc-badge est" id="rcBoardBadge">est.</span>
+    </div>
+    <div class="rc-seg">
+      <span class="yl-dot"></span>Metro · <span id="rcTransitTime">–</span>
+      &nbsp;<span class="rc-badge est" id="rcTransitBadge">est.</span>
+    </div>
+    <div class="rc-transfer" id="rcTransferRow" style="display:none">
+      🔄 Transfer at <span id="rcTransferStation" style="margin-left:4px;font-weight:700">–</span>
+    </div>
+    <div class="rc-row">
+      <span class="rc-dot metro"></span>
+      <span class="rc-name" id="rcAlightMetro">Destination Metro</span>
+      <span class="rc-badge est" id="rcAlightBadge">est.</span>
+    </div>
+    <div class="rc-seg">🛺 Auto · <span id="rcAlightDrive">–</span></div>
+    <div class="rc-row">
+      <span class="rc-dot dest"></span>
+      <span class="rc-name" id="rcEnd">Destination</span>
+    </div>
+    <div id="rcSameStationWarn" style="display:none;margin-top:10px;padding:8px 10px;background:var(--red-glow);border:1px solid rgba(255,77,77,0.35);border-radius:var(--radius-sm);font-size:12px;color:var(--red);line-height:1.4">
+      ⚠ Both addresses map to the same metro station — no metro leg needed. Book a direct auto.
+    </div>
+  </div>
+
+  <!-- LEG 1: Origin auto (home/dest → board metro) -->
+  <div class="leg-card" id="leg1Card">
+    <div class="leg-head">
+      <span class="leg-badge" id="leg1Badge">Leg 1</span>
+      <span class="leg-icon" id="leg1Icon">🏠</span>
+    </div>
+    <div class="leg-route" id="leg1Route">Home → Metro</div>
+    <div class="leg-mode">🛺 Auto · Departs at <span id="leg1DeptLabel">--:--</span></div>
+
+    <div class="timer-block">
+      <span class="timer-label" id="leg1TimerLabel">Departs in</span>
+      <span class="timer-value" id="leg1Timer">--:--</span>
+    </div>
+
+    <button class="btn" id="leg1Btn" onclick="bookUber(1)">
+      🚗 Book Auto to Metro
+    </button>
+
+    <div class="tags">
+      <span class="tag">Drop: <span id="leg1DropTag">Metro</span></span>
+      <span class="tag" id="leg1DeptTag">At: --:--</span>
+    </div>
+  </div>
+
+  <!-- Metro connector (first segment) -->
+  <div class="connector" id="metroConnector">
+    <div class="connector-line"></div>
+    <div class="connector-inner">
+      <div class="connector-pill">
+        <span class="yl-dot"></span>&nbsp;<span id="connLabel">Yellow Line</span>
+      </div>
+    </div>
+    <div class="connector-line"></div>
+  </div>
+
+  <!-- LEG 2a: First metro segment — only shown when there is a transfer -->
+  <div id="leg2aGroup" style="display:none">
+    <div class="leg-card" id="leg2aCard">
+      <div class="leg-head">
+        <span class="leg-badge" id="leg2aBadge">Leg 2</span>
+        <span class="leg-icon" id="leg2aIcon">🚇</span>
+      </div>
+      <div class="leg-route" id="leg2aRoute">Metro → Transfer</div>
+      <div class="leg-mode" id="leg2aMode">Tap Start when you board</div>
+
+      <div class="timer-block" id="leg2aTimerBlock" style="display:none">
+        <span class="timer-label">Arriving at transfer in</span>
+        <span class="timer-value" id="leg2aTimer">--:--</span>
+      </div>
+
+      <button class="btn btn-start" id="leg2aStartBtn" onclick="startFirstMetro()">
+        ▶ Boarded at <span id="leg2aBoardLabel">Metro</span>
+      </button>
+
+      <button class="btn btn-uber btn-urgent" id="leg2aXferBtn" onclick="startLeg2()" style="display:none">
+        🚇 Board Yellow Line at <span id="leg2aXferLabel">Transfer</span>
+      </button>
+    </div>
+
+    <!-- Transfer connector: 0 min, just walk across -->
+    <div class="connector">
+      <div class="connector-line"></div>
+      <div class="connector-inner">
+        <div class="connector-pill" style="background:var(--surface2);border-color:var(--border);color:var(--muted)">
+          🔄 Transfer at <span id="connXferStation">–</span> · 0 min
+        </div>
+      </div>
+      <div class="connector-line"></div>
+    </div>
+  </div>
+
+  <!-- LEG 2: Second metro segment + destination auto -->
+  <div class="leg-card" id="leg2Card">
+    <div class="leg-head">
+      <span class="leg-badge" id="leg2Badge">Leg 2</span>
+      <span class="leg-icon" id="leg2Icon">🚇</span>
+    </div>
+    <div class="leg-route" id="leg2Route">Metro → Metro</div>
+    <div class="leg-mode" id="leg2Mode">🛺 Auto at arrival station · Press Start when you board</div>
+
+    <div class="timer-block" id="leg2TimerBlock" style="display:none">
+      <span class="timer-label" id="leg2TimerLabel">Book auto in</span>
+      <span class="timer-value" id="leg2Timer">--:--</span>
+    </div>
+
+    <button class="btn btn-start" id="leg2StartBtn" onclick="startLeg2()">
+      ▶ Boarded at <span id="leg2BoardLabel">Metro</span>
+    </button>
+
+    <button class="btn btn-uber btn-urgent" id="leg2UberBtn" onclick="bookUber(2)" style="display:none">
+      🚗 Book Auto at <span id="leg2AlightLabel">Metro</span>
+    </button>
+
+    <div class="tags">
+      <span class="yl-pill"><span class="yl-dot"></span>Yellow Line</span>
+      <span class="tag" id="leg2BufferTag">Buffer: 5 min</span>
+      <span class="tag" id="leg2ArrivalTag">Auto at: ~--</span>
+    </div>
+  </div>
+
+  <div class="footer-actions">
+    <button class="btn-ghost" onclick="resetCommute()">Reset today's commute</button>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-step" id="loadingStep">Resolving route…</div>
+  <div class="loading-sub"  id="loadingSub">Contacting Google Maps APIs</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CONFIG = { MAPS_API_KEY: 'YOUR_KEY_HERE' };
+
+const FALLBACK = {
+  transitMin:  20,
+  originMetro: { name: 'Origin Metro (not resolved)', lat: null, lng: null },
+  destMetro:   { name: 'Destination Metro (not resolved)', lat: null, lng: null }
+};
+
+// ── Maps JS API loader ───────────────────────────────────────
+let _mapsApiPromise = null;
+
+function ensureMapsAPI(apiKey) {
+  if (_mapsApiPromise) return _mapsApiPromise;
+  if (window.google?.maps?.DirectionsService) {
+    _mapsApiPromise = Promise.resolve(); return _mapsApiPromise;
+  }
+  _mapsApiPromise = new Promise((resolve, reject) => {
+    window.__mapsReady = resolve;
+    const s = document.createElement('script');
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=__mapsReady&loading=async`;
+    s.onerror = () => { _mapsApiPromise = null; reject(new Error('Maps JS API failed to load')); };
+    document.head.appendChild(s);
+  });
+  return _mapsApiPromise;
+}
+
+// ── Geocoding ────────────────────────────────────────────────
+async function geocodeAddress(address, apiKey) {
+  const url  = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&region=in&key=${apiKey}`;
+  const res  = await fetch(url);
+  const data = await res.json();
+  if (data.status !== 'OK' || !data.results.length)
+    throw new Error(`"${address}" not found (${data.status})`);
+  const loc = data.results[0].geometry.location;
+  return { lat: loc.lat, lng: loc.lng, formatted: data.results[0].formatted_address };
+}
+
+// ── Supported metro station set (Yellow Line + Rapid Metro Gurgaon) ──
+// Rapid Metro connects to Yellow Line at Sikanderpur; including it lets
+// the app correctly use it as an origin/destination station.
+const SUPPORTED_STATIONS = new Set([
+  // DMRC Yellow Line (Line 2)
+  'samaypur badli', 'rohini sector 18-19', 'haiderpur badli mor',
+  'jahangirpuri', 'adarsh nagar', 'azadpur', 'model town', 'gtb nagar',
+  'vishwavidyalaya', 'vidhan sabha', 'civil lines', 'kashmere gate',
+  'chandni chowk', 'chawri bazar', 'chawri bazaar', 'new delhi',
+  'rajiv chowk', 'patel chowk', 'central secretariat', 'udyog bhawan',
+  'lok kalyan marg', 'jor bagh', 'ina', 'aiims', 'green park', 'hauz khas',
+  'malviya nagar', 'saket', 'qutab minar', 'qutb minar', 'chhattarpur',
+  'sultanpur', 'ghitorni', 'arjangarh', 'guru dronacharya', 'sikanderpur',
+  'mg road', 'iffco chowk', 'huda city centre', 'millennium city centre gurugram',
+  'millennium city centre',
+  // Rapid Metro Gurgaon (interchange at Sikanderpur)
+  'belvedere towers', 'sector 42-43', 'sector 42', 'sector 43',
+  'moulsari avenue', 'phase 1', 'phase-1',
+  'sector 53-54', 'sector 53', 'sector 54',
+  'sector 55-56', 'sector 55', 'sector 56'
+]);
+
+function isSupportedStation(rawName) {
+  const clean = rawName.toLowerCase()
+    .replace(/\(.*?\)/g, '').replace(/metro\s*station/g, '')
+    .replace(/\bmetro\b/g, '').replace(/\bstation\b/g, '')
+    .replace(/rapid\b/g, '').replace(/[–—-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (SUPPORTED_STATIONS.has(clean)) return true;
+  for (const s of SUPPORTED_STATIONS) {
+    if (clean.includes(s) || s.includes(clean)) return true;
+  }
+  return false;
+}
+
+// ── Rank candidates by driving distance ─────────────────────
+function rankByDrivingDistance(originLat, originLng, places) {
+  return new Promise(resolve => {
+    const fallback = () => {
+      const p = places[0];
+      resolve({ name: p.displayName.text, lat: p.location.latitude, lng: p.location.longitude, driveMin: null });
+    };
+    if (!window.google?.maps?.DistanceMatrixService) { fallback(); return; }
+    new google.maps.DistanceMatrixService().getDistanceMatrix({
+      origins:      [{ lat: originLat, lng: originLng }],
+      destinations: places.map(p => ({ lat: p.location.latitude, lng: p.location.longitude })),
+      travelMode: 'DRIVING', unitSystem: google.maps.UnitSystem.METRIC
+    }, (response, status) => {
+      if (status !== 'OK' || !response?.rows?.[0]) { fallback(); return; }
+      const elements = response.rows[0].elements;
+      const scored = places.map((p, i) => ({
+        name:     p.displayName.text,
+        lat:      p.location.latitude,
+        lng:      p.location.longitude,
+        driveSec: elements[i]?.status === 'OK' ? elements[i].duration.value : Infinity,
+        driveMin: elements[i]?.status === 'OK' ? Math.round(elements[i].duration.value / 60) : null
+      }));
+      scored.sort((a, b) => a.driveSec - b.driveSec);
+      resolve(scored[0]);
+    });
+  });
+}
+
+// ── Nearest Yellow Line metro ────────────────────────────────
+async function findNearestYellowLineMetro(lat, lng, apiKey) {
+  const res = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+      'X-Goog-FieldMask': 'places.displayName,places.location'
+    },
+    body: JSON.stringify({
+      locationRestriction: { circle: { center: { latitude: lat, longitude: lng }, radius: 8000 } },
+      includedTypes: ['subway_station'], maxResultCount: 10, rankPreference: 'DISTANCE'
+    })
+  });
+  if (!res.ok) throw new Error(`Places API ${res.status}`);
+  const data = await res.json();
+  if (!data.places?.length) throw new Error('No metro station found within 8 km');
+
+  const all = data.places;
+  const supported  = all.filter(p => isSupportedStation(p.displayName.text));
+  const candidates = supported.length > 0 ? supported : all;
+
+  try {
+    await ensureMapsAPI(apiKey);
+    return await rankByDrivingDistance(lat, lng, candidates);
+  } catch {
+    const p = candidates[0];
+    return { name: p.displayName.text, lat: p.location.latitude, lng: p.location.longitude, driveMin: null };
+  }
+}
+
+// ── Transit directions (per-segment, transfer-aware) ─────────
+// Returns { seg1Min, seg2Min, transfers, transferStation }.
+// seg1Min = first line (Rapid Metro or full journey if direct).
+// seg2Min = second line (Yellow Line after transfer; 0 if direct).
+// Prefers direct; accepts transfer only when it saves >5 min.
+function getTransitDetails(originLat, originLng, destLat, destLng) {
+  return new Promise(resolve => {
+    if (!window.google?.maps?.DirectionsService) { resolve(null); return; }
+    new google.maps.DirectionsService().route({
+      origin:      { lat: originLat, lng: originLng },
+      destination: { lat: destLat,   lng: destLng   },
+      travelMode:  'TRANSIT',
+      provideRouteAlternatives: true
+    }, (result, status) => {
+      if (status !== 'OK' || !result?.routes?.length) { resolve(null); return; }
+
+      const routes = result.routes.map(route => {
+        const steps = route.legs[0].steps.filter(s => s.travel_mode === 'TRANSIT');
+        if (!steps.length) return null;
+        const transfers = steps.length - 1;
+        if (transfers === 0) {
+          return { seg1Min: steps[0].duration.value / 60, seg2Min: 0, transfers: 0, transferStation: null };
+        }
+        return {
+          seg1Min:         steps[0].duration.value / 60,
+          seg2Min:         steps.slice(1).reduce((s, st) => s + st.duration.value, 0) / 60,
+          transfers,
+          transferStation: steps[0].transit.arrival_stop.name
+        };
+      }).filter(Boolean);
+
+      if (!routes.length) { resolve(null); return; }
+
+      const direct   = routes.find(r => r.transfers === 0);
+      const withXfer = routes.filter(r => r.transfers > 0)
+                             .sort((a, b) => (a.seg1Min + a.seg2Min) - (b.seg1Min + b.seg2Min))[0];
+      let chosen;
+      if (!direct)                                                           chosen = withXfer || routes[0];
+      else if (!withXfer)                                                    chosen = direct;
+      else if (direct.seg1Min - (withXfer.seg1Min + withXfer.seg2Min) > 5)  chosen = withXfer;
+      else                                                                   chosen = direct;
+
+      resolve(chosen);
+    });
+  });
+}
+
+// ── Route resolution ─────────────────────────────────────────
+async function resolveRoute() {
+  const key = getApiKey();
+  const r = {
+    homeLat: null, homeLng: null, homeFormatted: null,
+    destLat: null, destLng: null, destFormatted: null,
+    originMetroName: FALLBACK.originMetro.name,
+    originMetroLat:  null,
+    originMetroLng:  null,
+    originSource:    'est', originDriveMin: null,
+    destMetroName:   FALLBACK.destMetro.name,
+    destMetroLat:    null,
+    destMetroLng:    null,
+    destSource:      'est', destDriveMin: null,
+    seg1Min:         FALLBACK.transitMin,
+    seg2Min:         0,
+    transitSrc:      'est',
+    transfers:       0,
+    transferStation: null
+  };
+
+  const hasKey  = key && key !== 'YOUR_KEY_HERE';
+  const homeAddr = localStorage.getItem('mm_homeAddress') || '';
+  const destAddr = localStorage.getItem('mm_destAddress') || '';
+
+  if (!hasKey) {
+    showToast('No API key — using placeholder route data');
+    saveResolvedRoute(r); return;
+  }
+
+  if (homeAddr) {
+    setLoadingStep('Finding home location…', homeAddr);
+    try {
+      const geo = await geocodeAddress(homeAddr, key);
+      r.homeLat = geo.lat; r.homeLng = geo.lng; r.homeFormatted = geo.formatted;
+    } catch (e) { showToast('Home: ' + e.message); }
+  }
+
+  if (destAddr) {
+    setLoadingStep('Finding destination…', destAddr);
+    try {
+      const geo = await geocodeAddress(destAddr, key);
+      r.destLat = geo.lat; r.destLng = geo.lng; r.destFormatted = geo.formatted;
+    } catch (e) { showToast('Destination: ' + e.message); }
+  }
+
+  if (r.homeLat) {
+    setLoadingStep('Finding nearest metro to home…', 'Filtering & ranking by drive time');
+    try {
+      const m = await findNearestYellowLineMetro(r.homeLat, r.homeLng, key);
+      r.originMetroName = m.name; r.originMetroLat = m.lat; r.originMetroLng = m.lng;
+      r.originSource = 'api'; r.originDriveMin = m.driveMin;
+    } catch (e) { showToast('Origin metro: ' + e.message); }
+  }
+
+  if (r.destLat) {
+    setLoadingStep('Finding nearest metro to destination…', 'Filtering & ranking by drive time');
+    try {
+      const m = await findNearestYellowLineMetro(r.destLat, r.destLng, key);
+      r.destMetroName = m.name; r.destMetroLat = m.lat; r.destMetroLng = m.lng;
+      r.destSource = 'api'; r.destDriveMin = m.driveMin;
+    } catch (e) { showToast('Dest metro: ' + e.message); }
+  }
+
+  if (r.originMetroLat && r.destMetroLat) {
+    setLoadingStep('Calculating metro journey…', 'Checking routes & transfers');
+    try {
+      await ensureMapsAPI(key);
+      const t = await getTransitDetails(
+        r.originMetroLat, r.originMetroLng,
+        r.destMetroLat,   r.destMetroLng
+      );
+      if (t) {
+        r.seg1Min = t.seg1Min; r.seg2Min = t.seg2Min;
+        r.transitSrc = 'api';
+        r.transfers = t.transfers; r.transferStation = t.transferStation;
+      }
+    } catch (e) { showToast('Directions failed — using estimated times'); }
+  }
+
+  saveResolvedRoute(r);
+}
+
+// ── Resolved route storage ───────────────────────────────────
+function getResolvedRoute() {
+  const n = k => localStorage.getItem(k);
+  const f = k => { const v = parseFloat(localStorage.getItem(k)); return isNaN(v) ? null : v; };
+  const i = k => { const v = parseInt(localStorage.getItem(k));   return isNaN(v) ? 0    : v; };
+  return {
+    homeFormatted:   n('mm_rHomeFormatted') || '',
+    homeLat:         f('mm_rHomeLat'),
+    homeLng:         f('mm_rHomeLng'),
+    destFormatted:   n('mm_rDestFormatted') || '',
+    destLat:         f('mm_rDestLat'),
+    destLng:         f('mm_rDestLng'),
+    originMetroName: n('mm_rOriginName')    || FALLBACK.originMetro.name,
+    originMetroLat:  f('mm_rOriginLat'),
+    originMetroLng:  f('mm_rOriginLng'),
+    originSource:    n('mm_rOriginSrc')     || 'est',
+    originDriveMin:  f('mm_rOriginDrvMin'),
+    destMetroName:   n('mm_rDestMetroName') || FALLBACK.destMetro.name,
+    destMetroLat:    f('mm_rDestMetroLat'),
+    destMetroLng:    f('mm_rDestMetroLng'),
+    destSource:      n('mm_rDestSrc')       || 'est',
+    destDriveMin:    f('mm_rDestDrvMin'),
+    seg1Min:         f('mm_rSeg1Min')        || FALLBACK.transitMin,
+    seg2Min:         f('mm_rSeg2Min')        || 0,
+    transitSrc:      n('mm_rTransitSrc')    || 'est',
+    transfers:       i('mm_rTransfers'),
+    transferStation: n('mm_rTransferStation')
+  };
+}
+
+function saveResolvedRoute(r) {
+  const pairs = {
+    mm_rHomeFormatted: r.homeFormatted, mm_rHomeLat: r.homeLat, mm_rHomeLng: r.homeLng,
+    mm_rDestFormatted: r.destFormatted, mm_rDestLat: r.destLat, mm_rDestLng: r.destLng,
+    mm_rOriginName:    r.originMetroName, mm_rOriginLat: r.originMetroLat, mm_rOriginLng: r.originMetroLng,
+    mm_rOriginSrc:     r.originSource, mm_rOriginDrvMin: r.originDriveMin,
+    mm_rDestMetroName: r.destMetroName, mm_rDestMetroLat: r.destMetroLat, mm_rDestMetroLng: r.destMetroLng,
+    mm_rDestSrc:       r.destSource, mm_rDestDrvMin: r.destDriveMin,
+    mm_rSeg1Min:       r.seg1Min, mm_rSeg2Min: r.seg2Min,
+    mm_rTransitSrc:    r.transitSrc,
+    mm_rTransfers:     r.transfers, mm_rTransferStation: r.transferStation
+  };
+  Object.entries(pairs).forEach(([k, v]) => {
+    if (v != null) localStorage.setItem(k, v);
+    else           localStorage.removeItem(k);
+  });
+}
+
+// ── Active journey (direction-aware) ────────────────────────
+function normStation(name) {
+  return (name || '').toLowerCase()
+    .replace(/metro\s*station/g, '').replace(/\bmetro\b/g, '')
+    .replace(/\bstation\b/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function getActiveJourney() {
+  const rr  = getResolvedRoute();
+  const s   = getSettings();
+  const dir = localStorage.getItem('mm_direction') || 'out';
+
+  if (dir === 'out') {
+    return build({
+      startName:       rr.homeFormatted  || s.homeAddress || 'Home',
+      startLat:        rr.homeLat, startLng: rr.homeLng,
+      boardMetroName:  rr.originMetroName,
+      boardMetroLat:   rr.originMetroLat, boardMetroLng: rr.originMetroLng,
+      boardMetroSrc:   rr.originSource,   boardDriveMin: rr.originDriveMin,
+      alightMetroName: rr.destMetroName,
+      alightMetroLat:  rr.destMetroLat,   alightMetroLng: rr.destMetroLng,
+      alightMetroSrc:  rr.destSource,     alightDriveMin: rr.destDriveMin,
+      endName:         rr.destFormatted   || s.destAddress || 'Destination',
+      endLat:          rr.destLat,  endLng: rr.destLng,
+      deptTime:        s.departureTime
+    });
+  } else {
+    return build({
+      startName:       rr.destFormatted   || s.destAddress || 'Destination',
+      startLat:        rr.destLat,  startLng: rr.destLng,
+      boardMetroName:  rr.destMetroName,
+      boardMetroLat:   rr.destMetroLat,   boardMetroLng: rr.destMetroLng,
+      boardMetroSrc:   rr.destSource,     boardDriveMin: rr.destDriveMin,
+      alightMetroName: rr.originMetroName,
+      alightMetroLat:  rr.originMetroLat, alightMetroLng: rr.originMetroLng,
+      alightMetroSrc:  rr.originSource,   alightDriveMin: rr.originDriveMin,
+      endName:         rr.homeFormatted   || s.homeAddress || 'Home',
+      endLat:          rr.homeLat,  endLng: rr.homeLng,
+      deptTime:        s.returnTime || '18:00'
+    });
+  }
+
+  function build(j) {
+    j.seg1Min         = rr.seg1Min;
+    j.seg2Min         = rr.seg2Min;
+    j.transitSrc      = rr.transitSrc;
+    j.transfers       = rr.transfers;
+    j.transferStation = rr.transferStation;
+    j.sameStation     = normStation(j.boardMetroName) === normStation(j.alightMetroName);
+    return j;
+  }
+}
+
+// ── Settings ─────────────────────────────────────────────────
+function getApiKey() {
+  return (localStorage.getItem('mm_mapsApiKey') || CONFIG.MAPS_API_KEY || '').trim();
+}
+
+function getSettings() {
+  return {
+    departureTime: localStorage.getItem('mm_departureTime') || '08:20',
+    returnTime:    localStorage.getItem('mm_returnTime')    || '18:00',
+    bufferTime:    parseInt(localStorage.getItem('mm_bufferTime') || '5'),
+    homeAddress:   localStorage.getItem('mm_homeAddress') || '',
+    destAddress:   localStorage.getItem('mm_destAddress') || ''
+  };
+}
+
+async function handleSave() {
+  const dept  = document.getElementById('departureTime').value;
+  const ret   = document.getElementById('returnTime').value;
+  const buf   = parseInt(document.getElementById('bufferTime').value) || 5;
+  const home  = document.getElementById('homeAddress').value.trim();
+  const dest  = document.getElementById('destAddress').value.trim();
+  const key   = document.getElementById('mapsApiKey').value.trim();
+
+  if (!dept) { showToast('Please set a departure time'); return; }
+
+  localStorage.setItem('mm_departureTime', dept);
+  localStorage.setItem('mm_returnTime',    ret);
+  localStorage.setItem('mm_bufferTime',    buf);
+  localStorage.setItem('mm_homeAddress',   home);
+  localStorage.setItem('mm_destAddress',   dest);
+  if (key) localStorage.setItem('mm_mapsApiKey', key);
+
+  showLoading();
+  try { await resolveRoute(); } finally { hideLoading(); }
+
+  showToast('Route saved ✓');
+  showScreen('commute');
+}
+
+function populateForm() {
+  const s = getSettings();
+  document.getElementById('departureTime').value = s.departureTime;
+  document.getElementById('returnTime').value    = s.returnTime;
+  document.getElementById('bufferTime').value    = s.bufferTime;
+  document.getElementById('homeAddress').value   = s.homeAddress;
+  document.getElementById('destAddress').value   = s.destAddress;
+  document.getElementById('mapsApiKey').value    = localStorage.getItem('mm_mapsApiKey') || '';
+  previewAddress('home', s.homeAddress);
+  previewAddress('dest', s.destAddress);
+}
+
+function previewAddress(which, val) {
+  const short = val.length > 28 ? val.slice(0,28)+'…' : val;
+  document.getElementById(which === 'home' ? 'rtHomeName' : 'rtDestName').textContent = short || (which === 'home' ? 'Home' : 'Destination');
+}
+
+function toggleKeyVisibility() {
+  const inp = document.getElementById('mapsApiKey');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// ── Commute state ────────────────────────────────────────────
+// sm1: first metro segment (Rapid Metro) — waiting/active/arrived
+// leg2: second metro + auto — waiting/active/ready/booked
+// When no transfer: sm1 stays 'waiting' (unused); leg2 covers the full metro journey.
+function getState() {
+  return {
+    leg1:     localStorage.getItem('mm_s1')  || 'waiting',
+    sm1:      localStorage.getItem('mm_sm1') || 'waiting',
+    sm1Start: localStorage.getItem('mm_tm1') ? Number(localStorage.getItem('mm_tm1')) : null,
+    leg2:     localStorage.getItem('mm_s2')  || 'waiting',
+    leg2Start:localStorage.getItem('mm_t2')  ? Number(localStorage.getItem('mm_t2'))  : null
+  };
+}
+
+function setState(patch) {
+  const next = { ...getState(), ...patch };
+  localStorage.setItem('mm_s1',  next.leg1);
+  localStorage.setItem('mm_sm1', next.sm1);
+  localStorage.setItem('mm_s2',  next.leg2);
+  if (next.sm1Start  != null) localStorage.setItem('mm_tm1', next.sm1Start);
+  if (next.leg2Start != null) localStorage.setItem('mm_t2',  next.leg2Start);
+}
+
+const STATE_KEYS = ['mm_s1','mm_sm1','mm_tm1','mm_s2','mm_t2'];
+
+function resetCommute() {
+  if (!confirm('Reset today\'s commute? All progress will be cleared.')) return;
+  STATE_KEYS.forEach(k => localStorage.removeItem(k));
+  refresh();
+  showToast('Commute reset');
+}
+
+function setDirection(dir) {
+  if ((localStorage.getItem('mm_direction') || 'out') === dir) return;
+  localStorage.setItem('mm_direction', dir);
+  STATE_KEYS.forEach(k => localStorage.removeItem(k));
+  refresh();
+}
+
+// ── Uber deep links ──────────────────────────────────────────
+function uberLink(pickup, dropoff) {
+  let u = 'uber://?action=setPickup';
+  if (pickup)  u += `&pickup[latitude]=${pickup.lat}&pickup[longitude]=${pickup.lng}${pickup.name ? `&pickup[nickname]=${encodeURIComponent(pickup.name)}` : ''}`;
+  if (dropoff) u += `&dropoff[latitude]=${dropoff.lat}&dropoff[longitude]=${dropoff.lng}${dropoff.name ? `&dropoff[nickname]=${encodeURIComponent(dropoff.name)}` : ''}`;
+  return u;
+}
+
+function bookUber(leg) {
+  const j = getActiveJourney();
+  let url;
+
+  if (leg === 1) {
+    const pickup  = j.startLat ? { lat: j.startLat,  lng: j.startLng,  name: j.startName }       : null;
+    const dropoff = { lat: j.boardMetroLat,  lng: j.boardMetroLng,  name: j.boardMetroName };
+    url = uberLink(pickup, dropoff);
+  } else {
+    const pickup  = { lat: j.alightMetroLat, lng: j.alightMetroLng, name: j.alightMetroName };
+    const dropoff = j.endLat ? { lat: j.endLat, lng: j.endLng, name: j.endName } : null;
+    url = uberLink(pickup, dropoff);
+  }
+
+  setState({ [leg === 1 ? 'leg1' : 'leg2']: 'booked' });
+  refresh();
+  window.location.href = url;
+}
+
+// ── Timer helpers ────────────────────────────────────────────
+function secondsUntilDeparture(timeStr) {
+  const [h, m] = timeStr.split(':').map(Number);
+  const dep = new Date(); dep.setHours(h, m, 0, 0);
+  return Math.max(0, (dep - Date.now()) / 1000);
+}
+
+function legSecondsLeft(startTs, travelMin, bufferMin) {
+  if (!startTs) return null;
+  return Math.max(0, (travelMin - bufferMin) * 60 - (Date.now() - startTs) / 1000);
+}
+
+function legArrivalTime(startTs, travelMin) {
+  return startTs ? new Date(startTs + travelMin * 60 * 1000) : null;
+}
+
+function fmt(secs) {
+  if (secs == null) return '--:--';
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = Math.floor(secs % 60);
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function fmtClock(d) {
+  if (!d) return '--:--';
+  const h = d.getHours(), m = d.getMinutes(), p = h >= 12 ? 'PM' : 'AM';
+  return `${h%12||12}:${String(m).padStart(2,'0')} ${p}`;
+}
+
+function fmtTime(timeStr) {
+  const [h, m] = timeStr.split(':').map(Number);
+  const p = h >= 12 ? 'PM' : 'AM';
+  return `${h%12||12}:${String(m).padStart(2,'0')} ${p}`;
+}
+
+function fmtMin(min) {
+  if (!min && min !== 0) return '–';
+  return min >= 1 ? `~${Math.round(min)} min` : `~${Math.round(min*60)} sec`;
+}
+
+// ── UI refresh ───────────────────────────────────────────────
+function refresh() {
+  const s   = getSettings();
+  const st  = getState();
+  const j   = getActiveJourney();
+  const dir = localStorage.getItem('mm_direction') || 'out';
+
+  document.getElementById('journeyDate').textContent =
+    new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  // Direction toggle
+  document.getElementById('dirOutBtn').classList.toggle('active', dir === 'out');
+  document.getElementById('dirRetBtn').classList.toggle('active', dir === 'ret');
+
+  // Route card
+  const totalMin = j.seg1Min + j.seg2Min;
+  document.getElementById('rcStart').textContent       = j.startName;
+  document.getElementById('rcBoardMetro').textContent  = j.boardMetroName;
+  document.getElementById('rcTransitTime').textContent = fmtMin(totalMin);
+  document.getElementById('rcAlightMetro').textContent = j.alightMetroName;
+  document.getElementById('rcEnd').textContent         = j.endName;
+  document.getElementById('rcBoardDrive').textContent  = j.boardDriveMin  ? `~${j.boardDriveMin} min drive`  : 'auto';
+  document.getElementById('rcAlightDrive').textContent = j.alightDriveMin ? `~${j.alightDriveMin} min drive` : 'auto';
+  setBadge('rcBoardBadge',   j.boardMetroSrc,  true);
+  setBadge('rcAlightBadge',  j.alightMetroSrc, true);
+  setBadge('rcTransitBadge', j.transitSrc,     true);
+
+  const hasXfer = j.transfers > 0 && !j.sameStation;
+  document.getElementById('rcTransferRow').style.display = hasXfer ? '' : 'none';
+  if (hasXfer) document.getElementById('rcTransferStation').textContent = j.transferStation || '–';
+
+  // When same station: hide metro leg entirely, show warning in route card
+  document.getElementById('metroConnector').style.display = j.sameStation ? 'none' : '';
+  document.getElementById('leg2aGroup').style.display     = hasXfer       ? ''     : 'none';
+  const rcWarn = document.getElementById('rcSameStationWarn');
+  if (rcWarn) rcWarn.style.display = j.sameStation ? '' : 'none';
+
+  // First metro connector: shows first segment time
+  if (!j.sameStation) {
+    const seg1Label = hasXfer
+      ? `Rapid Metro · ${fmtMin(j.seg1Min)}`
+      : `Yellow Line · ${fmtMin(j.seg1Min)}`;
+    document.getElementById('connLabel').textContent = seg1Label;
+  }
+  if (hasXfer) {
+    document.getElementById('leg2aRoute').textContent      = `${j.boardMetroName} → ${j.transferStation}`;
+    document.getElementById('leg2aMode').textContent       = 'Rapid Metro · tap Start when you board';
+    document.getElementById('leg2aBoardLabel').textContent = j.boardMetroName;
+    document.getElementById('leg2aXferLabel').textContent  = j.transferStation || '–';
+    document.getElementById('connXferStation').textContent = j.transferStation || '–';
+  }
+
+  // Leg 1 static labels
+  const startShort = j.startName.split(',')[0];
+  document.getElementById('leg1Route').textContent     = `${startShort} → ${j.boardMetroName}`;
+  document.getElementById('leg1DeptLabel').textContent = fmtTime(j.deptTime);
+  document.getElementById('leg1DeptTag').textContent   = `At: ${fmtTime(j.deptTime)}`;
+  document.getElementById('leg1DropTag').textContent   = j.boardMetroName;
+
+  // Leg 2 static labels
+  const leg2From = hasXfer ? (j.transferStation || 'Transfer') : j.boardMetroName;
+  document.getElementById('leg2Route').textContent       = `${leg2From} → ${j.alightMetroName}`;
+  document.getElementById('leg2BoardLabel').textContent  = leg2From;
+  document.getElementById('leg2AlightLabel').textContent = j.alightMetroName;
+  document.getElementById('leg2BufferTag').textContent   = `Buffer: ${s.bufferTime} min`;
+  document.getElementById('leg2Mode').textContent        = `🛺 Auto at ${j.alightMetroName} · Press Start when you board`;
+
+  refreshLeg1(j, st);
+  refreshLeg2a(j, st);
+  refreshLeg2(j, s, st);
+}
+
+function setBadge(id, src, showText) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = `rc-badge ${src || 'est'}`;
+  if (showText) el.textContent = src === 'api' ? 'API ✓' : 'est.';
+}
+
+function setCard(id, stateClass) {
+  document.getElementById(id).className = 'leg-card' + (stateClass ? ` state-${stateClass}` : '');
+}
+
+function setLegBadge(id, text) {
+  document.getElementById(id).textContent = text;
+}
+
+function refreshLeg1(j, st) {
+  const secsLeft = secondsUntilDeparture(j.deptTime);
+  const btn      = document.getElementById('leg1Btn');
+  const timerEl  = document.getElementById('leg1Timer');
+  const labelEl  = document.getElementById('leg1TimerLabel');
+
+  if (st.leg1 === 'booked') {
+    setCard('leg1Card', 'booked'); setLegBadge('leg1Badge', '✓ Booked');
+    document.getElementById('leg1Icon').textContent = '✅';
+    timerEl.textContent = 'Booked'; timerEl.className = 'timer-value done';
+    labelEl.textContent = 'Status';
+    btn.textContent = '✓ Auto Booked'; btn.className = 'btn btn-done';
+    return;
+  }
+
+  if (secsLeft === 0) {
+    setCard('leg1Card', 'ready'); setLegBadge('leg1Badge', 'Book Now!');
+    document.getElementById('leg1Icon').textContent = '🚨';
+    timerEl.textContent = 'NOW'; timerEl.className = 'timer-value urgent';
+    labelEl.textContent = 'Time to book!';
+    btn.innerHTML = `🚗 Book Auto to ${j.boardMetroName}`;
+    btn.className = 'btn btn-uber btn-urgent';
+  } else {
+    const close = secsLeft < 600;
+    setCard('leg1Card', close ? 'active' : ''); setLegBadge('leg1Badge', 'Leg 1');
+    document.getElementById('leg1Icon').textContent = close ? '🛺' : '🏠';
+    timerEl.textContent = fmt(secsLeft);
+    timerEl.className = close ? 'timer-value urgent' : 'timer-value';
+    labelEl.textContent = 'Departs in';
+    btn.innerHTML = `🚗 Book Auto to ${j.boardMetroName}`;
+    btn.className = close ? 'btn btn-uber' : 'btn btn-start';
+  }
+}
+
+// Handles the first Rapid Metro segment when there's a transfer.
+// sm1: waiting → active (boarded) → arrived (timer 0, no auto — just cross platform)
+function refreshLeg2a(j, st) {
+  if (!j.transfers) return;
+  const startBtn = document.getElementById('leg2aStartBtn');
+  const xferBtn  = document.getElementById('leg2aXferBtn');
+  const timerBox = document.getElementById('leg2aTimerBlock');
+  const timerEl  = document.getElementById('leg2aTimer');
+  const badge    = document.getElementById('leg2aBadge');
+
+  if (st.sm1 === 'arrived') {
+    setCard('leg2aCard', 'booked'); badge.textContent = '✓ Arrived';
+    document.getElementById('leg2aIcon').textContent = '🔄';
+    timerBox.style.display = 'flex';
+    timerEl.textContent = 'Transfer'; timerEl.className = 'timer-value done';
+    startBtn.style.display = 'none'; xferBtn.style.display = '';
+    return;
+  }
+
+  if (st.sm1 === 'active') {
+    const secsLeft = legSecondsLeft(st.sm1Start, j.seg1Min, 0);
+    if (secsLeft === 0) {
+      setState({ sm1: 'arrived' });
+      setCard('leg2aCard', 'ready'); badge.textContent = 'Transfer!';
+      document.getElementById('leg2aIcon').textContent = '🔄';
+      timerBox.style.display = 'flex';
+      timerEl.textContent = 'NOW'; timerEl.className = 'timer-value urgent';
+      startBtn.style.display = 'none'; xferBtn.style.display = '';
+      return;
+    }
+    setCard('leg2aCard', 'active'); badge.textContent = 'In Progress';
+    document.getElementById('leg2aIcon').textContent = '🚇';
+    timerBox.style.display = 'flex';
+    timerEl.textContent = fmt(secsLeft); timerEl.className = secsLeft < 60 ? 'timer-value urgent' : 'timer-value';
+    startBtn.style.display = 'none'; xferBtn.style.display = 'none';
+    return;
+  }
+
+  // waiting
+  setCard('leg2aCard', ''); badge.textContent = 'Leg 2';
+  document.getElementById('leg2aIcon').textContent = '🚇';
+  timerBox.style.display = 'none'; startBtn.style.display = ''; xferBtn.style.display = 'none';
+}
+
+function refreshLeg2(j, s, st) {
+  const startBtn = document.getElementById('leg2StartBtn');
+  const uberBtn  = document.getElementById('leg2UberBtn');
+  const timerBox = document.getElementById('leg2TimerBlock');
+  const timerEl  = document.getElementById('leg2Timer');
+  const labelEl  = document.getElementById('leg2TimerLabel');
+  const travelMin = j.transfers > 0 ? j.seg2Min : j.seg1Min;
+  const legNum    = j.transfers > 0 ? 'Leg 3' : 'Leg 2';
+
+  // Same station: no metro needed — show direct auto button once leg 1 is done
+  if (j.sameStation) {
+    if (st.leg2 === 'booked') {
+      setCard('leg2Card', 'booked'); setLegBadge('leg2Badge', '✓ Booked');
+      document.getElementById('leg2Icon').textContent = '✅';
+      timerBox.style.display = 'none'; startBtn.style.display = 'none'; uberBtn.style.display = 'none';
+      return;
+    }
+    const ready = st.leg1 === 'booked';
+    setCard('leg2Card', ready ? 'active' : '');
+    setLegBadge('leg2Badge', ready ? 'Book Now!' : legNum);
+    document.getElementById('leg2Icon').textContent = ready ? '🛺' : '🏠';
+    timerBox.style.display = 'none'; startBtn.style.display = 'none';
+    uberBtn.style.display = ready ? '' : 'none';
+    return;
+  }
+
+  if (st.leg2 === 'booked') {
+    setCard('leg2Card', 'booked'); setLegBadge('leg2Badge', '✓ Booked');
+    document.getElementById('leg2Icon').textContent = '✅';
+    timerBox.style.display = 'flex';
+    timerEl.textContent = 'Booked'; timerEl.className = 'timer-value done';
+    labelEl.textContent = 'Status';
+    startBtn.style.display = 'none'; uberBtn.style.display = 'none';
+    return;
+  }
+
+  const timerSecs = st.leg2 === 'active'
+    ? legSecondsLeft(st.leg2Start, travelMin, s.bufferTime) : null;
+
+  if (st.leg2 === 'ready' || timerSecs === 0) {
+    setState({ leg2: 'ready' });
+    setCard('leg2Card', 'ready'); setLegBadge('leg2Badge', 'Book Now!');
+    document.getElementById('leg2Icon').textContent = '🚨';
+    timerBox.style.display = 'flex';
+    timerEl.textContent = 'NOW'; timerEl.className = 'timer-value urgent';
+    labelEl.textContent = `Book auto at ${j.alightMetroName}!`;
+    startBtn.style.display = 'none'; uberBtn.style.display = '';
+    return;
+  }
+
+  if (st.leg2 === 'active') {
+    const arrival = legArrivalTime(st.leg2Start, travelMin);
+    setCard('leg2Card', 'active'); setLegBadge('leg2Badge', 'In Progress');
+    document.getElementById('leg2Icon').textContent = '🚇';
+    timerBox.style.display = 'flex';
+    timerEl.textContent = fmt(timerSecs);
+    timerEl.className   = timerSecs < 60 ? 'timer-value urgent' : 'timer-value';
+    labelEl.textContent = 'Book auto in';
+    document.getElementById('leg2ArrivalTag').textContent = `Auto at: ~${fmtClock(arrival)}`;
+    startBtn.style.display = 'none'; uberBtn.style.display = 'none';
+    return;
+  }
+
+  // waiting
+  setCard('leg2Card', ''); setLegBadge('leg2Badge', legNum);
+  document.getElementById('leg2Icon').textContent = '🚇';
+  timerBox.style.display = 'none'; uberBtn.style.display = 'none';
+  // When transfer: start button is hidden — leg2 is started by the "Board Yellow Line" button in leg2a
+  startBtn.style.display = j.transfers > 0 ? 'none' : '';
+}
+
+// ── Actions ──────────────────────────────────────────────────
+function startFirstMetro() {
+  setState({ sm1: 'active', sm1Start: Date.now() });
+  refresh();
+}
+
+function startLeg2() {
+  setState({ leg2: 'active', leg2Start: Date.now() });
+  refresh();
+}
+
+// ── Loading overlay ──────────────────────────────────────────
+function showLoading() {
+  document.getElementById('loadingOverlay').classList.add('visible');
+  setLoadingStep('Resolving route…', 'Contacting Google Maps APIs');
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('visible');
+}
+function setLoadingStep(step, sub) {
+  document.getElementById('loadingStep').textContent = step;
+  document.getElementById('loadingSub').textContent  = sub;
+}
+
+// ── Navigation ───────────────────────────────────────────────
+let activeScreen = 'commute';
+
+function showScreen(which) {
+  document.getElementById('setupScreen').classList.toggle('active',   which === 'setup');
+  document.getElementById('commuteScreen').classList.toggle('active', which === 'commute');
+  document.getElementById('navBtn').textContent = which === 'commute' ? 'Setup' : 'Commute';
+  activeScreen = which;
+  if (which === 'setup')   populateForm();
+  if (which === 'commute') refresh();
+}
+
+function toggleScreen() {
+  showScreen(activeScreen === 'commute' ? 'setup' : 'commute');
+}
+
+// ── Toast ────────────────────────────────────────────────────
+let _toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── Init ─────────────────────────────────────────────────────
+function init() {
+  if (!localStorage.getItem('mm_departureTime')) showScreen('setup');
+  else showScreen('commute');
+  setInterval(refresh, 1000);
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1205,11 +1205,18 @@ function planRoute(originCoords, destCoords) {
 async function geocode(address) {
   const key = ls('mm_mapsApiKey') || '';
   if (!key) throw new Error('No API key set. Add it in Settings.');
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${key}`;
+  // Bias to Delhi NCR (SW 28.3,76.8 → NE 29.0,77.6); region=in as fallback
+  const bounds = '28.30%2C76.80%7C29.00%2C77.60';
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&bounds=${bounds}&region=in&key=${key}`;
   const res = await fetch(url);
   const data = await res.json();
   if (data.status !== 'OK') throw new Error(`Geocoding failed: ${data.status}`);
   const loc = data.results[0].geometry.location;
+  // Sanity-check: result must be within ~60 km of Delhi NCR centre
+  const dLat = loc.lat - 28.62, dLng = loc.lng - 77.22;
+  if (Math.sqrt(dLat*dLat + dLng*dLng) > 0.55) {
+    throw new Error(`Address "${address}" resolved outside Delhi NCR. Please be more specific (e.g. add "Gurgaon" or a landmark).`);
+  }
   return [loc.lat, loc.lng];
 }
 
@@ -1324,10 +1331,15 @@ async function planJourney() {
   showScreen('screen-preview');
 
   try {
+    function validNCR(c) {
+      if (!c) return false;
+      const dLat = c[0] - 28.62, dLng = c[1] - 77.22;
+      return Math.sqrt(dLat*dLat + dLng*dLng) <= 0.55;
+    }
     let fromCoords = ls(`mm_geocode_${fromAddr}`);
     let toCoords   = ls(`mm_geocode_${toAddr}`);
-    if (!fromCoords) { fromCoords = await geocode(fromAddr); ls(`mm_geocode_${fromAddr}`, fromCoords); }
-    if (!toCoords)   { toCoords   = await geocode(toAddr);   ls(`mm_geocode_${toAddr}`, toCoords); }
+    if (!validNCR(fromCoords)) { fromCoords = await geocode(fromAddr); ls(`mm_geocode_${fromAddr}`, fromCoords); }
+    if (!validNCR(toCoords))   { toCoords   = await geocode(toAddr);   ls(`mm_geocode_${toAddr}`, toCoords); }
 
     const route = planRoute(fromCoords, toCoords);
     if (!route) {
